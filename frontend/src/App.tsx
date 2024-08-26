@@ -1,10 +1,16 @@
-import { Button } from "@/components/ui/button";
-import "./App.css";
+import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
+import { ReactNode } from "react";
+interface AppProps {
+    children: ReactNode;
+}
 
-function App() {
+function App({ children }: AppProps) {
     return (
         <>
-            <Button>Click me</Button>
+            <Header />
+            <main>{children}</main>
+            <Footer />
         </>
     );
 }
