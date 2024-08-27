@@ -29,71 +29,77 @@ export default function Header() {
             <div className="border">
                 <ul className="flex overflow-x-scroll">
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Thiết Bị Điện Tử
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Phương Tiện Duy Chuyển
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Văn Phòng Phẩm
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">Sách Vở</Button>
+                        <Button variant={"outline"} className="m-1">
+                            Sách Vở
+                        </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Dụng Cụ Nhà Cửa
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Thiết Bị Điện Tử
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Phương Tiện Duy Chuyển
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Văn Phòng Phẩm
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">Sách Vở</Button>
+                        <Button variant={"outline"} className="m-1">
+                            Sách Vở
+                        </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Dụng Cụ Nhà Cửa
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Thiết Bị Điện Tử
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Phương Tiện Duy Chuyển
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Văn Phòng Phẩm
                         </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">Sách Vở</Button>
+                        <Button variant={"outline"} className="m-1">
+                            Sách Vở
+                        </Button>
                     </li>
                     <li>
-                        <Button className="rounded-none m-1">
+                        <Button variant={"outline"} className="m-1">
                             Dụng Cụ Nhà Cửa
                         </Button>
                     </li>

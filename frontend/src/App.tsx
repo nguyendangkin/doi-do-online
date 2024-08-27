@@ -9,7 +9,7 @@ function App({ children }: AppProps) {
     return (
         <>
             <Header />
-            <main>{children}</main>
+            <main className="container mx-auto px-4 py-2">{children}</main>
             <Footer />
         </>
     );
