@@ -99,7 +99,7 @@ export default function Register() {
                                 <FormItem className="!mt-2">
                                     <FormLabel>Mật khẩu</FormLabel>
                                     <FormControl>
-                                        <Input {...field} />
+                                        <Input type="password" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -112,7 +112,7 @@ export default function Register() {
                                 <FormItem className="!mt-2">
                                     <FormLabel>Nhập lại mật khẩu</FormLabel>
                                     <FormControl>
-                                        <Input {...field} />
+                                        <Input type="password" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
