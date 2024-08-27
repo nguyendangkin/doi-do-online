@@ -31,7 +31,7 @@ export default function Home() {
     return (
         <>
             <div className="grid grid-cols-4 gap-4">
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -49,7 +49,7 @@ export default function Home() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -67,7 +67,7 @@ export default function Home() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -85,7 +85,7 @@ export default function Home() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded "
@@ -97,7 +97,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -109,7 +109,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -121,7 +121,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -133,7 +133,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -145,7 +145,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -157,7 +157,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -169,7 +169,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -181,7 +181,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -193,7 +193,7 @@ export default function Home() {
                         <p>Dàn pc core i9 2028</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -211,7 +211,7 @@ export default function Home() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -229,7 +229,7 @@ export default function Home() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
@@ -247,7 +247,7 @@ export default function Home() {
                         </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
                     <CardHeader>
                         <img
                             className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
