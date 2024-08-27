@@ -1,6 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FaBoxes, FaSearch } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 export default function Header() {
     return (
@@ -19,10 +20,12 @@ export default function Header() {
                     </Button>
                 </div>
                 <div className="flex">
-                    <Button variant="outline" className="mr-1">
-                        Đăng ký
+                    <Button asChild variant="outline" className="mr-1">
+                        <Link to="/dang-ky">Đăng ký</Link>
                     </Button>
-                    <Button variant="outline">Đăng nhập</Button>
+                    <Button asChild variant="outline">
+                        <Link to="/dang-nhap">Đăng nhập</Link>
+                    </Button>
                 </div>
             </div>
 

@@ -1,18 +1,26 @@
-import Footer from "@/components/layout/Footer";
-import Header from "@/components/layout/Header";
+import DefaultLayout from "@/components/layout/DefaultLayout";
+import LoginLayout from "@/components/layout/LoginLayout";
 import { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+
 interface AppProps {
     children: ReactNode;
 }
 
-function App({ children }: AppProps) {
-    return (
-        <>
-            <Header />
-            <main className="container mx-auto px-4 py-2">{children}</main>
-            <Footer />
-        </>
-    );
-}
+export default function App({ children }: AppProps) {
+    const location = useLocation();
 
-export default App;
+    // Xác định layout dựa trên đường dẫn
+    const renderLayout = () => {
+        switch (location.pathname) {
+            case "/dang-nhap":
+                return <LoginLayout>{children}</LoginLayout>;
+            case "/dang-ky":
+                return <LoginLayout>{children}</LoginLayout>;
+            default:
+                return <DefaultLayout>{children}</DefaultLayout>;
+        }
+    };
+
+    return <>{renderLayout()}</>;
+}
