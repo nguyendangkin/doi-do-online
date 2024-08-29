@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -14,12 +13,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader } from "@/components/ui/card";
+import { toast } from "sonner";
+import axiosInstance from "@/axios/axiosConfig";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const formSchema = z
     .object({
-        username: z.string().min(2, {
-            message: "Tên người dùng phải có ít nhất 2 ký tự.",
-        }),
         fullName: z
             .string()
             .min(2, { message: "Tên đầy đủ phải có ít nhất 2 ký tự." }),
@@ -37,6 +38,8 @@ const formSchema = z
     });
 
 export default function Register() {
+    const [isLoading, setIsLoading] = useState(false);
+    const navigate = useNavigate();
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -49,10 +52,23 @@ export default function Register() {
     });
 
     // 2. Define a submit handler.
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         // Do something with the form values.
         // ✅ This will be type-safe and validated.
-        console.log(values);
+        // console.log(values);
+        try {
+            setIsLoading(true);
+            const responsive = await axiosInstance.post(
+                "/auth/register",
+                values
+            );
+            toast.success(responsive.data.message);
+            navigate("/dang-nhap");
+        } catch (error: any) {
+            toast.error(error);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -119,7 +135,14 @@ export default function Register() {
                             )}
                         />
                         <div className="flex justify-end">
-                            <Button type="submit">Đăng ký</Button>
+                            {isLoading ? (
+                                <Button disabled>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Đang xử lý...
+                                </Button>
+                            ) : (
+                                <Button type="submit">Đăng ký</Button>
+                            )}
                         </div>
                     </form>
                 </Form>
