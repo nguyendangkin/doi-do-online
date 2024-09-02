@@ -6,7 +6,10 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private jwtService: JwtService,
+  ) {}
 
   async handleHashPassword(password: string) {
     const saltOrRounds = 10;
@@ -52,9 +55,16 @@ export class AuthService {
       return {
         statusCode: HttpStatus.OK,
         message: 'Đăng nhập thành công.',
-        result,
+        account: result,
       };
     }
     return null;
+  }
+
+  async login(user: any) {
+    const payload = { email: user.account.email, id: user.account.id };
+    return {
+      access_token: this.jwtService.sign(payload),
+    };
   }
 }
