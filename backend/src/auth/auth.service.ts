@@ -3,12 +3,15 @@ import { RegisterDto } from './dto/registerDto.dto';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async handleHashPassword(password: string) {
@@ -61,10 +64,47 @@ export class AuthService {
     return null;
   }
 
-  async login(user: any) {
-    const payload = { email: user.account.email, id: user.account.id };
-    return {
-      access_token: this.jwtService.sign(payload),
+  handleGenerateAccessToken(user: any) {
+    const payload = {
+      email: user.email,
+      id: user.id,
     };
+    return this.jwtService.sign(payload, {
+      expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION'),
+    });
+  }
+
+  handleGenerateRefreshToken(user: any) {
+    const payload = {
+      email: user.email,
+      id: user.id,
+    };
+    return this.jwtService.sign(payload, {
+      expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
+    });
+  }
+
+  async login(user: any, res) {
+    const accessToken = this.handleGenerateAccessToken(user);
+    const refreshToken = this.handleGenerateRefreshToken(user);
+
+    await this.setRefreshTokenCookie(res, refreshToken);
+
+    return {
+      access_token: accessToken,
+      message: user.message,
+      user: {
+        email: user.account.email,
+      },
+    };
+  }
+
+  async setRefreshTokenCookie(res: Response, token: string) {
+    res.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: this.configService.get('JWT_SECRET'),
+      sameSite: 'strict',
+      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
+    });
   }
 }

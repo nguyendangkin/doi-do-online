@@ -7,6 +7,7 @@ const axiosInstance = axios.create({
     headers: {
         "Content-Type": "application/x-www-form-urlencoded",
     },
+    withCredentials: true,
 });
 
 // Thêm Authorization token vào headers nếu có
