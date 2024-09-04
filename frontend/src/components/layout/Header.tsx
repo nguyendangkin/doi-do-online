@@ -2,8 +2,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FaBoxes, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSelector } from "react-redux";
 
 export default function Header() {
+    const accessToken = useSelector(
+        (state: any) => state.auth.users?.access_token
+    );
     return (
         <header className="">
             <div className="flex p-1 items-center">
@@ -13,19 +18,32 @@ export default function Header() {
                         <FaBoxes />
                     </span>
                 </h1>
-                <div className="flex w-[100%]">
-                    <Input className="mr-1 ml-1 " />
-                    <Button variant="outline" className="mr-1">
+                <div className="flex w-[100%] gap-1">
+                    <Input />
+                    <Button variant="outline">
                         <FaSearch />
                     </Button>
                 </div>
-                <div className="flex">
-                    <Button asChild variant="outline" className="mr-1">
-                        <Link to="/dang-ky">Đăng ký</Link>
-                    </Button>
-                    <Button asChild variant="outline">
-                        <Link to="/dang-nhap">Đăng nhập</Link>
-                    </Button>
+                <div className="flex gap-1 ml-3">
+                    {accessToken ? (
+                        <Avatar>
+                            <AvatarImage src="https://github.com/shadcn.png" />
+                            <AvatarFallback>CN</AvatarFallback>
+                        </Avatar>
+                    ) : (
+                        <Button asChild variant="outline">
+                            <Link to="/dang-ky">Đăng ký</Link>
+                        </Button>
+                    )}
+                    {accessToken ? (
+                        <Button asChild variant="outline">
+                            <Link to="/dang-xuat">Đăng xuất</Link>
+                        </Button>
+                    ) : (
+                        <Button asChild variant="outline">
+                            <Link to="/dang-nhap">Đăng nhập</Link>
+                        </Button>
+                    )}
                 </div>
             </div>
 

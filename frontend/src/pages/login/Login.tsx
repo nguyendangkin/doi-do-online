@@ -18,6 +18,8 @@ import axiosInstance from "@/axios/axiosConfig";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setUsers } from "@/redux/authSlice";
 
 const formSchema = z.object({
     email: z.string().min(1, { message: "Email không được để trống." }),
@@ -27,6 +29,7 @@ const formSchema = z.object({
 export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -44,6 +47,7 @@ export default function Login() {
         try {
             setIsLoading(true);
             const responsive = await axiosInstance.post("/auth/login", values);
+            dispatch(setUsers(responsive.data));
             toast.success(responsive.data.message);
             navigate("/");
         } catch (error: any) {

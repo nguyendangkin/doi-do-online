@@ -1,6 +1,11 @@
 import { UsersService } from 'src/users/users.service';
 import { RegisterDto } from './dto/registerDto.dto';
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { ConfigService } from '@nestjs/config';
@@ -74,6 +79,15 @@ export class AuthService {
     });
   }
 
+  async setRefreshTokenCookie(res: Response, token: string) {
+    res.cookie('refresh_token', token, {
+      httpOnly: true,
+      secure: this.configService.get('JWT_SECRET'),
+      sameSite: 'strict',
+      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
+    });
+  }
+
   handleGenerateRefreshToken(user: any) {
     const payload = {
       email: user.email,
@@ -91,20 +105,21 @@ export class AuthService {
     await this.setRefreshTokenCookie(res, refreshToken);
 
     return {
-      access_token: accessToken,
       message: user.message,
       user: {
         email: user.account.email,
+        access_token: accessToken,
       },
     };
   }
 
-  async setRefreshTokenCookie(res: Response, token: string) {
-    res.cookie('refresh_token', token, {
-      httpOnly: true,
-      secure: this.configService.get('JWT_SECRET'),
-      sameSite: 'strict',
-      maxAge: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
-    });
+  async refreshNewToken(refreshToken: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(refreshToken);
+      const accessToken = this.handleGenerateAccessToken(payload);
+      return { access_token: accessToken };
+    } catch (error) {
+      throw new UnauthorizedException('Refresh token không hợp lệ');
+    }
   }
 }

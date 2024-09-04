@@ -1,14 +1,6 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Request,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from 'src/auth/auth.service';
 import { RegisterDto } from 'src/auth/dto/registerDto.dto';
 import { LocalAuthGuard } from 'src/auth/local-auth.guard';
@@ -25,5 +17,18 @@ export class AuthController {
   @Post('login')
   async login(@Req() req, @Res({ passthrough: true }) res: Response) {
     return this.authService.login(req.user, res);
+  }
+
+  @Post('refresh-token')
+  async refreshNewToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const refreshToken = req.cookies['refresh_token'];
+    if (!refreshToken) {
+      res.status(401).json({ message: 'Không tìm thấy Refresh Token' });
+      return;
+    }
+    return this.authService.refreshNewToken(refreshToken);
   }
 }

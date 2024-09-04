@@ -3,6 +3,8 @@ import Home from "@/pages/home/Home";
 import Login from "@/pages/login/Login";
 import NotFound from "@/pages/notFound/NotFound";
 import Register from "@/pages/register/Register";
+import Setting from "@/pages/setting/Setting";
+import ProtectedRoute from "@/router/ProtectedRoute";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 
 export default function AppRouter() {
@@ -11,8 +13,27 @@ export default function AppRouter() {
             <App>
                 <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="dang-ky" element={<Register />} />
-                    <Route path="dang-nhap" element={<Login />} />
+
+                    <Route
+                        path="dang-ky"
+                        element={
+                            <ProtectedRoute>
+                                <Register />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="dang-nhap"
+                        element={
+                            <ProtectedRoute>
+                                <Login />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route path="cai-dat" element={<Setting />} />
+
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </App>
