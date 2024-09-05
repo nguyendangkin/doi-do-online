@@ -3,12 +3,21 @@ import { Button } from "@/components/ui/button";
 import { FaBoxes, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { persistor } from "@/redux/store";
+import { logout } from "@/redux/authSlice";
 
 export default function Header() {
+    const dispatch = useDispatch();
     const accessToken = useSelector(
         (state: any) => state.auth.users?.access_token
     );
+
+    const handleLogout = async () => {
+        await persistor.purge();
+        dispatch(logout());
+    };
+
     return (
         <header className="">
             <div className="flex p-1 items-center">
@@ -36,8 +45,8 @@ export default function Header() {
                         </Button>
                     )}
                     {accessToken ? (
-                        <Button asChild variant="outline">
-                            <Link to="/dang-xuat">Đăng xuất</Link>
+                        <Button onClick={handleLogout} variant="outline">
+                            Đăng xuất
                         </Button>
                     ) : (
                         <Button asChild variant="outline">
