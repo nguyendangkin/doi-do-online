@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FaBoxes, FaSearch } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -9,8 +9,18 @@ import axiosInstance from "@/axios/axiosConfig";
 import { logout } from "@/redux/authSlice";
 import { persistor } from "@/redux/store";
 
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 export default function Header() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const accessToken = useSelector(
         (state: any) => state.auth.users?.access_token
     );
@@ -18,8 +28,9 @@ export default function Header() {
     const handleLogout = async () => {
         try {
             await persistor.purge();
-            dispatch(logout());
             await axiosInstance.get("/auth/logout");
+            dispatch(logout());
+            navigate("/");
         } catch (error) {
             console.log(error);
         }
@@ -42,10 +53,28 @@ export default function Header() {
                 </div>
                 <div className="flex gap-1 ml-3">
                     {accessToken ? (
-                        <Avatar>
-                            <AvatarImage src="https://github.com/shadcn.png" />
-                            <AvatarFallback>CN</AvatarFallback>
-                        </Avatar>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger>
+                                <Avatar>
+                                    <AvatarImage src="https://github.com/shadcn.png" />
+                                    <AvatarFallback>CN</AvatarFallback>
+                                </Avatar>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuLabel>
+                                    Quản lý tài khoản
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem asChild>
+                                    <Link to={"/cai-dat"}>Cài đặt</Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>Kho của tôi</DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    Đẩy hàng lên kho
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>Phòng chát</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     ) : (
                         <Button asChild variant="outline">
                             <Link to="/dang-ky">Đăng ký</Link>

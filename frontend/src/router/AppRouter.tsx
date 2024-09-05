@@ -32,7 +32,14 @@ export default function AppRouter() {
                         }
                     />
 
-                    <Route path="cai-dat" element={<Setting />} />
+                    <Route
+                        path="cai-dat"
+                        element={
+                            <ProtectedRoute>
+                                <Setting />
+                            </ProtectedRoute>
+                        }
+                    />
 
                     <Route path="*" element={<NotFound />} />
                 </Routes>

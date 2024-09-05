@@ -19,8 +19,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
             (location.pathname === "/dang-ky" ||
                 location.pathname === "/dang-nhap")
         ) {
-            // If there's an accessToken and the path is /dang-ky or /dang-nhap, redirect to /
             navigate("/");
+        }
+        if (!accessToken && location.pathname === "/cai-dat") {
+            navigate("/dang-nhap");
         }
     }, [accessToken, location.pathname, navigate]);
 
