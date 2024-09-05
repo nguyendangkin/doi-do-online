@@ -4,8 +4,10 @@ import { FaBoxes, FaSearch } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDispatch, useSelector } from "react-redux";
-import { persistor } from "@/redux/store";
+
+import axiosInstance from "@/axios/axiosConfig";
 import { logout } from "@/redux/authSlice";
+import { persistor } from "@/redux/store";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -14,8 +16,13 @@ export default function Header() {
     );
 
     const handleLogout = async () => {
-        await persistor.purge();
-        dispatch(logout());
+        try {
+            await persistor.purge();
+            dispatch(logout());
+            await axiosInstance.get("/auth/logout");
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     return (
