@@ -1,3 +1,7 @@
+import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
     Card,
@@ -6,26 +10,20 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z
     .object({
-        email: z.string().min(1, {
-            message: "Username must be at least 2 characters.",
-        }),
         fullName: z.string().min(1, {
             message: "Tên đầy đủ không được bỏ trống.",
         }),
@@ -36,48 +34,81 @@ const formSchema = z
             message: "Mật khẩu mới ít nhất 6 ký tự.",
         }),
         newPasswordConfirm: z.string().min(6, {
-            message: "Confirm new password must be at least 6 characters.",
+            message: "Xác nhận mật khẩu mới ít nhất 6 ký tự.",
         }),
     })
     .refine((data) => data.newPassword === data.newPasswordConfirm, {
         message: "Mật khẩu và xác nhận mật khẩu phải khớp.",
-        path: ["newPasswordConfirm"], // Chỉ định trường gặp lỗi
+        path: ["newPasswordConfirm"],
     });
 
 export default function Setting() {
+    const [isChangeName, setIsChangeName] = useState(false);
+    const [isChangeAddress, setIsChangeAddress] = useState(false);
+    const [isChangePassword, setIsChangePassword] = useState(false);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "",
-            fullName: "",
+            fullName: "Nguyễn Chin",
             password: "",
             newPassword: "",
             newPasswordConfirm: "",
         },
     });
 
-    // 2. Define a submit handler.
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values);
+        console.log("Form submitted:", values);
     }
+
     return (
         <Card className="grid grid-cols-3">
-            <div>
+            <div className="col-span-1">
                 <CardHeader>
-                    <Avatar>
-                        <AvatarImage src="https://github.com/shadcn.png" />
-                        <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
-                    <CardTitle>Nguyễn Chin</CardTitle>
+                    <div className="flex gap-2">
+                        <Avatar>
+                            <AvatarImage src="https://github.com/shadcn.png" />
+                            <AvatarFallback>CN</AvatarFallback>
+                        </Avatar>
+                        <Button variant="outline">Thay ảnh</Button>
+                    </div>
+                    <div className="flex gap-2 items-center">
+                        {isChangeName ? (
+                            <Input
+                                value={form.getValues("fullName")}
+                                onChange={(e) =>
+                                    form.setValue("fullName", e.target.value)
+                                }
+                            />
+                        ) : (
+                            <CardTitle>{form.getValues("fullName")}</CardTitle>
+                        )}
+                        <Button
+                            onClick={() => setIsChangeName(!isChangeName)}
+                            variant="outline"
+                        >
+                            {isChangeName ? "Lưu" : "Đổi tên"}
+                        </Button>
+                    </div>
                     <CardDescription>Người dùng</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p>Phường 17, gò vấp</p>
+                    <div className="flex items-center gap-2">
+                        {isChangeAddress ? <Input /> : <p>Phường 17, gò vấp</p>}
+                        <Button
+                            variant="outline"
+                            onClick={() => setIsChangeAddress(!isChangeAddress)}
+                        >
+                            {isChangeAddress ? "Lưu" : "Đổi địa chỉ"}
+                        </Button>
+                    </div>
                 </CardContent>
             </div>
             <div className="col-span-2 p-4">
+                <div className="mb-3">
+                    <Label>Email</Label>
+                    <Input disabled value="nguyenchin@gmail.com" />
+                </div>
                 <Form {...form}>
                     <form
                         onSubmit={form.handleSubmit(onSubmit)}
@@ -85,100 +116,76 @@ export default function Setting() {
                     >
                         <FormField
                             control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="shadcn"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="fullName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="shadcn"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
                             name="password"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="shadcn"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription>
+                                    <FormLabel>Mật khẩu hiện tại</FormLabel>
+                                    <div className="flex items-center gap-2">
+                                        <FormControl>
+                                            <Input
+                                                disabled={!isChangePassword}
+                                                type="password"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() =>
+                                                setIsChangePassword(
+                                                    !isChangePassword
+                                                )
+                                            }
+                                        >
+                                            {isChangePassword
+                                                ? "Thôi"
+                                                : "Đổi mật khẩu"}
+                                        </Button>
+                                    </div>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-                        <FormField
-                            control={form.control}
-                            name="newPassword"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="shadcn"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="newPasswordConfirm"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Username</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="shadcn"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        This is your public display name.
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <Button type="submit">Submit</Button>
+
+                        {isChangePassword && (
+                            <>
+                                <FormField
+                                    control={form.control}
+                                    name="newPassword"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Mật khẩu mới</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="newPasswordConfirm"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>
+                                                Nhập lại mật khẩu mới
+                                            </FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit">Đổi</Button>
+                            </>
+                        )}
                     </form>
                 </Form>
             </div>
