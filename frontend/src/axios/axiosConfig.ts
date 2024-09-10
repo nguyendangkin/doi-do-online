@@ -1,4 +1,5 @@
 import axios from "axios";
+import { store } from "@/redux/store";
 
 // Tạo một instance của Axios với các config mặc định
 const axiosInstance = axios.create({
@@ -18,6 +19,13 @@ axiosInstance.defaults.headers.common["Authorization"] = AUTH_TOKEN;
 axiosInstance.interceptors.request.use(
     (config) => {
         // Làm gì đó trước khi gửi request
+        const accessToken = (store.getState().auth.users as any)?.access_token;
+
+        // Nếu có access token, thêm vào header
+        if (accessToken) {
+            config.headers["Authorization"] = `Bearer ${accessToken}`;
+        }
+
         return config;
     },
     (error) => {

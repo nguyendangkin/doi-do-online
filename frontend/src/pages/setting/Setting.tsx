@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSelector } from "react-redux";
+import axiosInstance from "@/axios/axiosConfig";
 
 const formSchema = z
     .object({
@@ -47,19 +49,47 @@ export default function Setting() {
     const [isChangeAddress, setIsChangeAddress] = useState(false);
     const [isChangePassword, setIsChangePassword] = useState(false);
 
+    const users = useSelector((state: any) => state?.auth?.users);
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: "Nguyễn Chin",
+            fullName: users?.fullName,
             password: "",
             newPassword: "",
             newPasswordConfirm: "",
         },
     });
 
+    const handleChangePassword = () => {
+        if (isChangePassword) {
+            // Reset password fields when cancelling
+            form.reset({
+                ...form.getValues(),
+                password: "",
+                newPassword: "",
+                newPasswordConfirm: "",
+            });
+        }
+        setIsChangePassword(!isChangePassword);
+    };
+
     function onSubmit(values: z.infer<typeof formSchema>) {
         console.log("Form submitted:", values);
     }
+
+    async function fetchUsers() {
+        try {
+            const response = await axiosInstance.get("users/profile");
+            console.log(response.data);
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    useEffect(() => {
+        fetchUsers();
+    }, []);
 
     return (
         <Card className="grid grid-cols-3">
@@ -107,7 +137,7 @@ export default function Setting() {
             <div className="col-span-2 p-4">
                 <div className="mb-3">
                     <Label>Email</Label>
-                    <Input disabled value="nguyenchin@gmail.com" />
+                    <Input disabled value={users?.email} />
                 </div>
                 <Form {...form}>
                     <form
@@ -132,9 +162,7 @@ export default function Setting() {
                                             type="button"
                                             variant="outline"
                                             onClick={() =>
-                                                setIsChangePassword(
-                                                    !isChangePassword
-                                                )
+                                                handleChangePassword()
                                             }
                                         >
                                             {isChangePassword

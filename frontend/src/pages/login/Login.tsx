@@ -47,6 +47,7 @@ export default function Login() {
         try {
             setIsLoading(true);
             const responsive = await axiosInstance.post("/auth/login", values);
+
             dispatch(setUsers(responsive.data));
             toast.success(responsive.data.message);
             navigate("/");

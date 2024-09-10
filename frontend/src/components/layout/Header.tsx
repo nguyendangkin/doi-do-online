@@ -17,12 +17,13 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useEffect, useState } from "react";
 
 export default function Header() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const accessToken = useSelector(
-        (state: any) => state.auth.users?.access_token
+        (state: any) => state?.auth?.users?.access_token
     );
 
     const handleLogout = async () => {

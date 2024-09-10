@@ -56,23 +56,11 @@ export class AuthService {
     }
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findOneUserByEmail(email);
-    if (user && (await this.handleComparePassword(pass, user.password))) {
-      const { password, ...result } = user;
-      return {
-        statusCode: HttpStatus.OK,
-        message: 'Đăng nhập thành công.',
-        account: result,
-      };
-    }
-    return null;
-  }
-
   handleGenerateAccessToken(user: any) {
     const payload = {
       email: user.email,
       id: user.id,
+      role: user.role,
     };
     return this.jwtService.sign(payload, {
       expiresIn: this.configService.get('ACCESS_TOKEN_EXPIRATION'),
@@ -92,25 +80,11 @@ export class AuthService {
     const payload = {
       email: user.email,
       id: user.id,
+      role: user.role,
     };
     return this.jwtService.sign(payload, {
       expiresIn: this.configService.get('REFRESH_TOKEN_EXPIRATION'),
     });
-  }
-
-  async login(user: any, res) {
-    const accessToken = this.handleGenerateAccessToken(user);
-    const refreshToken = this.handleGenerateRefreshToken(user);
-
-    await this.setRefreshTokenCookie(res, refreshToken);
-
-    return {
-      message: user.message,
-      user: {
-        email: user.account.email,
-        access_token: accessToken,
-      },
-    };
   }
 
   async refreshNewToken(refreshToken: string) {
@@ -121,5 +95,26 @@ export class AuthService {
     } catch (error) {
       throw new UnauthorizedException('Refresh token không hợp lệ');
     }
+  }
+
+  async validateUser(email: string, pass: string): Promise<any> {
+    const user = await this.usersService.findOneUserByEmail(email);
+    if (user && (await this.handleComparePassword(pass, user.password))) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
+  }
+
+  async login(user: any, res) {
+    const accessToken = this.handleGenerateAccessToken(user);
+    const refreshToken = this.handleGenerateRefreshToken(user);
+
+    await this.setRefreshTokenCookie(res, refreshToken);
+
+    return {
+      message: 'Đăng nhập thành công',
+      access_token: accessToken,
+    };
   }
 }

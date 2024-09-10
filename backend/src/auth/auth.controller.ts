@@ -30,7 +30,7 @@ export class AuthController {
   @Get('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
-    res.status(200).json({ message: 'Đăng xuất thành công' });
+    return { message: 'Đăng xuất thành công' };
   }
 
   @Post('refresh-token')
