@@ -10,7 +10,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     const navigate = useNavigate();
     const location = useLocation();
     const accessToken = useSelector(
-        (state: any) => state.auth.users?.access_token
+        (state: any) => state.auth.user?.access_token
     );
 
     useEffect(() => {

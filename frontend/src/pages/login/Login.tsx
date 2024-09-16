@@ -19,7 +19,7 @@ import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { setUsers } from "@/redux/authSlice";
+import { setUser } from "@/redux/authSlice";
 
 const formSchema = z.object({
     email: z.string().min(1, { message: "Email không được để trống." }),
@@ -48,7 +48,7 @@ export default function Login() {
             setIsLoading(true);
             const responsive = await axiosInstance.post("/auth/login", values);
 
-            dispatch(setUsers(responsive.data));
+            dispatch(setUser(responsive.data));
             toast.success(responsive.data.message);
             navigate("/");
         } catch (error: any) {

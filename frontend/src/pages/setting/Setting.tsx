@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -49,12 +49,12 @@ export default function Setting() {
     const [isChangeAddress, setIsChangeAddress] = useState(false);
     const [isChangePassword, setIsChangePassword] = useState(false);
 
-    const users = useSelector((state: any) => state?.auth?.users);
+    const user = useSelector((state: any) => state?.auth?.user);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: users?.fullName,
+            fullName: user?.fullName,
             password: "",
             newPassword: "",
             newPasswordConfirm: "",
@@ -78,9 +78,9 @@ export default function Setting() {
         console.log("Form submitted:", values);
     }
 
-    async function fetchUsers() {
+    async function fetchUser() {
         try {
-            const response = await axiosInstance.get("users/profile");
+            const response = await axiosInstance.get("user/profile");
             console.log(response.data);
         } catch (error) {
             console.log(error);
@@ -88,7 +88,7 @@ export default function Setting() {
     }
 
     useEffect(() => {
-        fetchUsers();
+        fetchUser();
     }, []);
 
     return (
@@ -137,7 +137,7 @@ export default function Setting() {
             <div className="col-span-2 p-4">
                 <div className="mb-3">
                     <Label>Email</Label>
-                    <Input disabled value={users?.email} />
+                    <Input disabled value={user?.email} />
                 </div>
                 <Form {...form}>
                     <form

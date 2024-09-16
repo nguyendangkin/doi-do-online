@@ -1,10 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
+import { JwtExceptionFilter } from 'src/auth/JwtExceptionFilter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.useGlobalFilters(new JwtExceptionFilter());
   app.use(cookieParser());
 
   app.enableCors({
