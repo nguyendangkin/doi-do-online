@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,13 @@ export default function Setting() {
     const [currentPassword, setCurrentPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [avatar, setAvatar] = useState(
+        user?.avatar || "https://github.com/shadcn.png"
+    );
+    const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
+    const [newAvatarPreview, setNewAvatarPreview] = useState<string | null>(
+        null
+    );
     const [isEditing, setIsEditing] = useState({
         fullName: false,
         password: false,
@@ -26,7 +33,10 @@ export default function Setting() {
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
+        avatar: "",
     });
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchUser();
@@ -38,6 +48,7 @@ export default function Setting() {
             dispatch(setUserInfo(response.data));
             setFullName(response.data.fullName);
             setEmail(response.data.email);
+            setAvatar(response.data.avatar || "https://github.com/shadcn.png");
         } catch (error) {
             console.log(error);
         }
@@ -105,17 +116,60 @@ export default function Setting() {
                 updatedInfo.currentPassword = currentPassword;
                 updatedInfo.newPassword = newPassword;
             }
+
+            // Tải lên ảnh đại diện mới nếu có
+            if (newAvatarFile) {
+                const formData = new FormData();
+                formData.append("avatar", newAvatarFile);
+                const avatarResponse = await axiosInstance.post(
+                    "user/avatar",
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                    }
+                );
+                updatedInfo.avatar = avatarResponse.data.avatarUrl;
+            }
+
             setIsEditing({
                 fullName: false,
                 password: false,
             });
             await axiosInstance.put("user/profile", updatedInfo);
             fetchUser();
-            alert("Information updated successfully");
-            setIsEditing({ fullName: false, password: false });
+            setNewAvatarFile(null);
+            setNewAvatarPreview(null);
+            alert("Thông tin đã được cập nhật thành công");
         } catch (error) {
             console.log(error);
-            alert("Failed to update information");
+            alert("Không thể cập nhật thông tin");
+        }
+    };
+
+    const handleAvatarClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) {
+                setErrors((prev) => ({
+                    ...prev,
+                    avatar: "Kích thước file không được vượt quá 5MB",
+                }));
+                return;
+            }
+
+            setNewAvatarFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setNewAvatarPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+            setErrors((prev) => ({ ...prev, avatar: "" }));
         }
     };
 
@@ -123,12 +177,42 @@ export default function Setting() {
         <Card className="grid grid-cols-3">
             <div className="col-span-1">
                 <CardHeader>
-                    <div className="flex gap-2">
-                        <Avatar>
-                            <AvatarImage src="https://github.com/shadcn.png" />
-                            <AvatarFallback>CN</AvatarFallback>
+                    <div className="flex flex-col items-center gap-2">
+                        <Avatar
+                            className="w-24 h-24 cursor-pointer"
+                            onClick={handleAvatarClick}
+                        >
+                            <AvatarImage src={newAvatarPreview || avatar} />
+                            <AvatarFallback>
+                                {fullName.charAt(0)}
+                            </AvatarFallback>
                         </Avatar>
-                        <Button variant="outline">Thay ảnh</Button>
+                        <Input
+                            type="file"
+                            ref={fileInputRef}
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleFileChange}
+                        />
+                        <Button variant="outline" onClick={handleAvatarClick}>
+                            Chọn ảnh mới
+                        </Button>
+                        {newAvatarPreview && (
+                            <Button
+                                variant="ghost"
+                                onClick={() => {
+                                    setNewAvatarFile(null);
+                                    setNewAvatarPreview(null);
+                                }}
+                            >
+                                Hủy
+                            </Button>
+                        )}
+                        {errors.avatar && (
+                            <p className="text-red-500 text-sm">
+                                {errors.avatar}
+                            </p>
+                        )}
                     </div>
                 </CardHeader>
             </div>
