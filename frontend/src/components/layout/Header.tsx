@@ -17,7 +17,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -40,12 +39,15 @@ export default function Header() {
     return (
         <header className="">
             <div className="flex p-1 items-center">
-                <h1 className="border text-center rounded font-semibold pr-1">
-                    <span className="flex items-center">
-                        Đổi Hàng Tốt
+                <Button
+                    asChild
+                    className="border text-center rounded font-semibold p-4 mr-1"
+                >
+                    <Link to={"/"} className="flex items-center">
+                        <span className="mr-2">Đổi Hàng Tốt</span>
                         <FaBoxes />
-                    </span>
-                </h1>
+                    </Link>
+                </Button>
                 <div className="flex w-[100%] gap-1">
                     <Input />
                     <Button variant="outline">

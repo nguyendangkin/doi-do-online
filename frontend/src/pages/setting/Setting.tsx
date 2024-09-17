@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "@/axios/axiosConfig";
+import { setUserInfo } from "@/redux/userSlice";
 
 const formSchema = z
     .object({
@@ -46,20 +47,31 @@ const formSchema = z
 
 export default function Setting() {
     const [isChangeName, setIsChangeName] = useState(false);
-    const [isChangeAddress, setIsChangeAddress] = useState(false);
     const [isChangePassword, setIsChangePassword] = useState(false);
+    const dispatch = useDispatch();
 
-    const user = useSelector((state: any) => state?.auth?.user);
+    const user = useSelector((state: any) => state?.user?.user);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: user?.fullName,
+            fullName: "",
             password: "",
             newPassword: "",
             newPasswordConfirm: "",
         },
     });
+
+    useEffect(() => {
+        if (user) {
+            form.reset({
+                fullName: user.fullName || "",
+                password: "",
+                newPassword: "",
+                newPasswordConfirm: "",
+            });
+        }
+    }, [user]);
 
     const handleChangePassword = () => {
         if (isChangePassword) {
@@ -81,7 +93,7 @@ export default function Setting() {
     async function fetchUser() {
         try {
             const response = await axiosInstance.get("user/profile");
-            console.log(response.data);
+            dispatch(setUserInfo(response.data));
         } catch (error) {
             console.log(error);
         }
@@ -89,6 +101,7 @@ export default function Setting() {
 
     useEffect(() => {
         fetchUser();
+        console.log(1);
     }, []);
 
     return (
@@ -120,24 +133,13 @@ export default function Setting() {
                             {isChangeName ? "Lưu" : "Đổi tên"}
                         </Button>
                     </div>
-                    <CardDescription>Người dùng</CardDescription>
+                    <CardDescription>Người dùng bình thường</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex items-center gap-2">
-                        {isChangeAddress ? <Input /> : <p>Phường 17, gò vấp</p>}
-                        <Button
-                            variant="outline"
-                            onClick={() => setIsChangeAddress(!isChangeAddress)}
-                        >
-                            {isChangeAddress ? "Lưu" : "Đổi địa chỉ"}
-                        </Button>
-                    </div>
-                </CardContent>
             </div>
             <div className="col-span-2 p-4">
                 <div className="mb-3">
                     <Label>Email</Label>
-                    <Input disabled value={user?.email} />
+                    <Input disabled value={user?.email || ""} />
                 </div>
                 <Form {...form}>
                     <form
@@ -155,6 +157,11 @@ export default function Setting() {
                                             <Input
                                                 disabled={!isChangePassword}
                                                 type="password"
+                                                placeholder={
+                                                    !isChangePassword
+                                                        ? "*****************************"
+                                                        : ""
+                                                }
                                                 {...field}
                                             />
                                         </FormControl>
