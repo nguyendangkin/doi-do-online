@@ -1,108 +1,123 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { Card, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "@/axios/axiosConfig";
 import { setUserInfo } from "@/redux/userSlice";
 
-const formSchema = z
-    .object({
-        fullName: z.string().min(1, {
-            message: "Tên đầy đủ không được bỏ trống.",
-        }),
-        password: z.string().min(6, {
-            message: "Mật khẩu không được bỏ trống.",
-        }),
-        newPassword: z.string().min(6, {
-            message: "Mật khẩu mới ít nhất 6 ký tự.",
-        }),
-        newPasswordConfirm: z.string().min(6, {
-            message: "Xác nhận mật khẩu mới ít nhất 6 ký tự.",
-        }),
-    })
-    .refine((data) => data.newPassword === data.newPasswordConfirm, {
-        message: "Mật khẩu và xác nhận mật khẩu phải khớp.",
-        path: ["newPasswordConfirm"],
-    });
-
 export default function Setting() {
-    const [isChangeName, setIsChangeName] = useState(false);
-    const [isChangePassword, setIsChangePassword] = useState(false);
     const dispatch = useDispatch();
-
     const user = useSelector((state: any) => state?.user?.user);
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            fullName: "",
-            password: "",
-            newPassword: "",
-            newPasswordConfirm: "",
-        },
+    const [fullName, setFullName] = useState(user?.fullName || "");
+    const [email, setEmail] = useState(user?.email || "");
+    const [currentPassword, setCurrentPassword] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [isEditing, setIsEditing] = useState({
+        fullName: false,
+        password: false,
+    });
+    const [errors, setErrors] = useState({
+        fullName: "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
     });
 
     useEffect(() => {
-        if (user) {
-            form.reset({
-                fullName: user.fullName || "",
-                password: "",
-                newPassword: "",
-                newPasswordConfirm: "",
-            });
-        }
-    }, [user]);
-
-    const handleChangePassword = () => {
-        if (isChangePassword) {
-            // Reset password fields when cancelling
-            form.reset({
-                ...form.getValues(),
-                password: "",
-                newPassword: "",
-                newPasswordConfirm: "",
-            });
-        }
-        setIsChangePassword(!isChangePassword);
-    };
-
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        console.log("Form submitted:", values);
-    }
+        fetchUser();
+    }, []);
 
     async function fetchUser() {
         try {
             const response = await axiosInstance.get("user/profile");
             dispatch(setUserInfo(response.data));
+            setFullName(response.data.fullName);
+            setEmail(response.data.email);
         } catch (error) {
             console.log(error);
         }
     }
 
-    useEffect(() => {
-        fetchUser();
-        console.log(1);
-    }, []);
+    const handleEditToggle = (field: keyof typeof isEditing) => {
+        setIsEditing((prev) => ({ ...prev, [field]: !prev[field] }));
+        if (field === "password") {
+            setCurrentPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+            setErrors((prev) => ({
+                ...prev,
+                currentPassword: "",
+                newPassword: "",
+                confirmPassword: "",
+            }));
+        }
+    };
+
+    const validateForm = () => {
+        let isValid = true;
+        const newErrors = { ...errors };
+
+        if (fullName.trim().length < 2) {
+            newErrors.fullName = "Tên đầy đủ phải dài ít nhất 2 ký tự";
+            isValid = false;
+        } else {
+            newErrors.fullName = "";
+        }
+
+        if (isEditing.password) {
+            if (currentPassword.trim() === "") {
+                newErrors.currentPassword = "Mật khẩu hiện tại là bắt buộc";
+                isValid = false;
+            } else {
+                newErrors.currentPassword = "";
+            }
+
+            if (newPassword.trim().length < 6) {
+                newErrors.newPassword = "Mật khẩu mới phải dài ít nhất 6 ký tự";
+                isValid = false;
+            } else {
+                newErrors.newPassword = "";
+            }
+
+            if (newPassword !== confirmPassword) {
+                newErrors.confirmPassword = "Mật khẩu không khớp";
+                isValid = false;
+            } else {
+                newErrors.confirmPassword = "";
+            }
+        }
+
+        setErrors(newErrors);
+        return isValid;
+    };
+
+    const handleSave = async () => {
+        if (!validateForm()) return;
+
+        try {
+            const updatedInfo: any = { fullName };
+            if (isEditing.password) {
+                updatedInfo.currentPassword = currentPassword;
+                updatedInfo.newPassword = newPassword;
+            }
+            setIsEditing({
+                fullName: false,
+                password: false,
+            });
+            await axiosInstance.put("user/profile", updatedInfo);
+            fetchUser();
+            alert("Information updated successfully");
+            setIsEditing({ fullName: false, password: false });
+        } catch (error) {
+            console.log(error);
+            alert("Failed to update information");
+        }
+    };
 
     return (
         <Card className="grid grid-cols-3">
@@ -115,114 +130,102 @@ export default function Setting() {
                         </Avatar>
                         <Button variant="outline">Thay ảnh</Button>
                     </div>
-                    <div className="flex gap-2 items-center">
-                        {isChangeName ? (
-                            <Input
-                                value={form.getValues("fullName")}
-                                onChange={(e) =>
-                                    form.setValue("fullName", e.target.value)
-                                }
-                            />
-                        ) : (
-                            <CardTitle>{form.getValues("fullName")}</CardTitle>
-                        )}
-                        <Button
-                            onClick={() => setIsChangeName(!isChangeName)}
-                            variant="outline"
-                        >
-                            {isChangeName ? "Lưu" : "Đổi tên"}
-                        </Button>
-                    </div>
-                    <CardDescription>Người dùng bình thường</CardDescription>
                 </CardHeader>
             </div>
             <div className="col-span-2 p-4">
-                <div className="mb-3">
+                {/* Email */}
+                <div className="mb-3 flex items-center justify-between">
                     <Label>Email</Label>
-                    <Input disabled value={user?.email || ""} />
+                    <Input className="ml-3" disabled value={email} />
                 </div>
-                <Form {...form}>
-                    <form
-                        onSubmit={form.handleSubmit(onSubmit)}
-                        className="space-y-8"
-                    >
-                        <FormField
-                            control={form.control}
-                            name="password"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Mật khẩu hiện tại</FormLabel>
-                                    <div className="flex items-center gap-2">
-                                        <FormControl>
-                                            <Input
-                                                disabled={!isChangePassword}
-                                                type="password"
-                                                placeholder={
-                                                    !isChangePassword
-                                                        ? "*****************************"
-                                                        : ""
-                                                }
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            onClick={() =>
-                                                handleChangePassword()
-                                            }
-                                        >
-                                            {isChangePassword
-                                                ? "Thôi"
-                                                : "Đổi mật khẩu"}
-                                        </Button>
-                                    </div>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
 
-                        {isChangePassword && (
-                            <>
-                                <FormField
-                                    control={form.control}
-                                    name="newPassword"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Mật khẩu mới</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="password"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
+                {/* Full Name */}
+                <div className="mb-3 flex items-center justify-between">
+                    <Label>Tên đầy đủ</Label>
+                    <div className="flex items-center gap-2">
+                        <Input
+                            disabled={!isEditing.fullName}
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                        />
+                        <Button
+                            variant="outline"
+                            onClick={() => handleEditToggle("fullName")}
+                        >
+                            {isEditing.fullName ? "Thôi" : "Chỉnh sửa"}
+                        </Button>
+                    </div>
+                </div>
+                {errors.fullName && (
+                    <p className="text-red-500 text-sm">{errors.fullName}</p>
+                )}
+
+                {/* Password */}
+                <div className="mb-3">
+                    <div className="flex items-center justify-between mb-2">
+                        <Label>Mật khẩu</Label>
+                        <Button
+                            variant="outline"
+                            onClick={() => handleEditToggle("password")}
+                        >
+                            {isEditing.password ? "Thôi" : "Chỉnh sửa"}
+                        </Button>
+                    </div>
+                    {isEditing.password && (
+                        <>
+                            <div className="mb-2">
+                                <Input
+                                    type="password"
+                                    value={currentPassword}
+                                    placeholder="Mật khẩu hiện tại"
+                                    onChange={(e) =>
+                                        setCurrentPassword(e.target.value)
+                                    }
                                 />
-                                <FormField
-                                    control={form.control}
-                                    name="newPasswordConfirm"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>
-                                                Nhập lại mật khẩu mới
-                                            </FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="password"
-                                                    {...field}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
+                                {errors.currentPassword && (
+                                    <p className="text-red-500 text-sm">
+                                        {errors.currentPassword}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="mb-2">
+                                <Input
+                                    type="password"
+                                    value={newPassword}
+                                    placeholder="Mật khẩu mới"
+                                    onChange={(e) =>
+                                        setNewPassword(e.target.value)
+                                    }
                                 />
-                                <Button type="submit">Đổi</Button>
-                            </>
-                        )}
-                    </form>
-                </Form>
+                                {errors.newPassword && (
+                                    <p className="text-red-500 text-sm">
+                                        {errors.newPassword}
+                                    </p>
+                                )}
+                            </div>
+                            <div>
+                                <Input
+                                    type="password"
+                                    value={confirmPassword}
+                                    placeholder="Nhập lại mật khẩu mới"
+                                    onChange={(e) =>
+                                        setConfirmPassword(e.target.value)
+                                    }
+                                />
+                                {errors.confirmPassword && (
+                                    <p className="text-red-500 text-sm">
+                                        {errors.confirmPassword}
+                                    </p>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end">
+                    <Button onClick={handleSave}>Lưu tất cả</Button>
+                </div>
             </div>
         </Card>
     );
