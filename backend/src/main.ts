@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import { JwtExceptionFilter } from 'src/auth/JwtExceptionFilter';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -12,6 +13,7 @@ async function bootstrap() {
     origin: 'http://localhost:5173', // Địa chỉ của frontend
     credentials: true, // Cho phép gửi cookie
   });
+  app.useGlobalPipes(new ValidationPipe());
 
   await app.listen(3000);
 }

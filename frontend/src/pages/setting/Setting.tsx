@@ -1,316 +1,220 @@
-import { useEffect, useState, useRef } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import axiosInstance from "@/axios/axiosConfig";
 import { setUserInfo } from "@/redux/userSlice";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+
+const formSchema = z
+    .object({
+        fullName: z.string().min(2, "Full name must be at least 2 characters"),
+        currentPassword: z
+            .string()
+            .min(6, "Current password must be at least 6 characters"),
+        newPassword: z
+            .string()
+            .min(6, "New password must be at least 6 characters"),
+        confirmPassword: z
+            .string()
+            .min(6, "Confirm password must be at least 6 characters"),
+    })
+    .refine((data) => data.newPassword === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"],
+    });
 
 export default function Setting() {
     const dispatch = useDispatch();
     const user = useSelector((state: any) => state?.user?.user);
+    const userEmail = useSelector((state: any) => state?.auth?.user?.email);
 
-    const [fullName, setFullName] = useState(user?.fullName || "");
-    const [email, setEmail] = useState(user?.email || "");
-    const [currentPassword, setCurrentPassword] = useState("");
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [avatar, setAvatar] = useState(
-        user?.avatar || "https://github.com/shadcn.png"
-    );
-    const [newAvatarFile, setNewAvatarFile] = useState<File | null>(null);
-    const [newAvatarPreview, setNewAvatarPreview] = useState<string | null>(
-        null
-    );
-    const [isEditing, setIsEditing] = useState({
-        fullName: false,
-        password: false,
-    });
-    const [errors, setErrors] = useState({
-        fullName: "",
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-        avatar: "",
-    });
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [isEditName, setIsEditName] = useState(false);
+    const [isEditPassword, setIsEditPassword] = useState(false);
 
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            fullName: "",
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+        },
+    });
 
     useEffect(() => {
-        fetchUser();
-    }, []);
+        if (user?.fullName) {
+            form.setValue("fullName", user.fullName);
+        }
+    }, [user, form]);
 
-    async function fetchUser() {
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (userEmail) {
+                try {
+                    const response = await axiosInstance.get(
+                        `/user/profile/${userEmail}`
+                    );
+                    dispatch(setUserInfo(response.data));
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            }
+        };
+
+        fetchUserData();
+    }, [userEmail, dispatch]);
+
+    const handleEditName = () => {
+        setIsEditName(!isEditName);
+    };
+
+    const handleEditPassword = () => {
+        setIsEditPassword(!isEditPassword);
+    };
+
+    const onSubmit = async (data: any) => {
         try {
-            const response = await axiosInstance.get("user/profile");
-            dispatch(setUserInfo(response.data));
-            setFullName(response.data.fullName);
-            setEmail(response.data.email);
-            setAvatar(response.data.avatar || "https://github.com/shadcn.png");
+            // Implement your update logic here
+            console.log("Form data:", data);
+            // You would typically send this data to your API
         } catch (error) {
-            console.log(error);
-        }
-    }
-
-    const handleEditToggle = (field: keyof typeof isEditing) => {
-        setIsEditing((prev) => ({ ...prev, [field]: !prev[field] }));
-        if (field === "password") {
-            setCurrentPassword("");
-            setNewPassword("");
-            setConfirmPassword("");
-            setErrors((prev) => ({
-                ...prev,
-                currentPassword: "",
-                newPassword: "",
-                confirmPassword: "",
-            }));
+            console.error("Error updating user data:", error);
         }
     };
 
-    const validateForm = () => {
-        let isValid = true;
-        const newErrors = { ...errors };
-
-        if (fullName.trim().length < 2) {
-            newErrors.fullName = "Tên đầy đủ phải dài ít nhất 2 ký tự";
-            isValid = false;
-        } else {
-            newErrors.fullName = "";
-        }
-
-        if (isEditing.password) {
-            if (currentPassword.trim() === "") {
-                newErrors.currentPassword = "Mật khẩu hiện tại là bắt buộc";
-                isValid = false;
-            } else {
-                newErrors.currentPassword = "";
-            }
-
-            if (newPassword.trim().length < 6) {
-                newErrors.newPassword = "Mật khẩu mới phải dài ít nhất 6 ký tự";
-                isValid = false;
-            } else {
-                newErrors.newPassword = "";
-            }
-
-            if (newPassword !== confirmPassword) {
-                newErrors.confirmPassword = "Mật khẩu không khớp";
-                isValid = false;
-            } else {
-                newErrors.confirmPassword = "";
-            }
-        }
-
-        setErrors(newErrors);
-        return isValid;
-    };
-
-    const handleSave = async () => {
-        if (!validateForm()) return;
-
-        try {
-            const updatedInfo: any = { fullName };
-            if (isEditing.password) {
-                updatedInfo.currentPassword = currentPassword;
-                updatedInfo.newPassword = newPassword;
-            }
-
-            // Tải lên ảnh đại diện mới nếu có
-            if (newAvatarFile) {
-                const formData = new FormData();
-                formData.append("avatar", newAvatarFile);
-                const avatarResponse = await axiosInstance.post(
-                    "user/avatar",
-                    formData,
-                    {
-                        headers: {
-                            "Content-Type": "multipart/form-data",
-                        },
-                    }
-                );
-                updatedInfo.avatar = avatarResponse.data.avatarUrl;
-            }
-
-            setIsEditing({
-                fullName: false,
-                password: false,
-            });
-            await axiosInstance.put("user/profile", updatedInfo);
-            fetchUser();
-            setNewAvatarFile(null);
-            setNewAvatarPreview(null);
-            alert("Thông tin đã được cập nhật thành công");
-        } catch (error) {
-            console.log(error);
-            alert("Không thể cập nhật thông tin");
-        }
-    };
-
-    const handleAvatarClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+    const handleAvatarChange = (event: any) => {
+        const file = event.target.files[0];
         if (file) {
-            if (file.size > 5 * 1024 * 1024) {
-                setErrors((prev) => ({
-                    ...prev,
-                    avatar: "Kích thước file không được vượt quá 5MB",
-                }));
-                return;
-            }
-
-            setNewAvatarFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setNewAvatarPreview(reader.result as string);
+                if (typeof reader.result === "string") {
+                    setAvatarPreview(reader.result);
+                }
             };
             reader.readAsDataURL(file);
-            setErrors((prev) => ({ ...prev, avatar: "" }));
         }
     };
 
     return (
-        <Card className="grid grid-cols-3">
-            <div className="col-span-1">
-                <CardHeader>
-                    <div className="flex flex-col items-center gap-2">
-                        <Avatar
-                            className="w-24 h-24 cursor-pointer"
-                            onClick={handleAvatarClick}
-                        >
-                            <AvatarImage src={newAvatarPreview || avatar} />
-                            <AvatarFallback>
-                                {fullName.charAt(0)}
-                            </AvatarFallback>
-                        </Avatar>
-                        <Input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleFileChange}
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <div className="flex gap-2 items-center">
+                    <Avatar>
+                        <AvatarImage
+                            src={
+                                avatarPreview ||
+                                user?.avatarUrl ||
+                                "https://github.com/shadcn.png"
+                            }
                         />
-                        <Button variant="outline" onClick={handleAvatarClick}>
-                            Chọn ảnh mới
-                        </Button>
-                        {newAvatarPreview && (
-                            <Button
-                                variant="ghost"
-                                onClick={() => {
-                                    setNewAvatarFile(null);
-                                    setNewAvatarPreview(null);
-                                }}
-                            >
-                                Hủy
-                            </Button>
-                        )}
-                        {errors.avatar && (
-                            <p className="text-red-500 text-sm">
-                                {errors.avatar}
-                            </p>
-                        )}
-                    </div>
-                </CardHeader>
-            </div>
-            <div className="col-span-2 p-4">
-                {/* Email */}
-                <div className="mb-3 flex items-center justify-between">
-                    <Label>Email</Label>
-                    <Input className="ml-3" disabled value={email} />
+                        <AvatarFallback>
+                            {user?.fullName?.charAt(0) || "U"}
+                        </AvatarFallback>
+                    </Avatar>
+                    <Input
+                        type="file"
+                        onChange={handleAvatarChange}
+                        accept="image/*"
+                    />
                 </div>
 
-                {/* Full Name */}
-                <div className="mb-3 flex items-center justify-between">
-                    <Label>Tên đầy đủ</Label>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            disabled={!isEditing.fullName}
-                            value={fullName}
-                            onChange={(e) => setFullName(e.target.value)}
-                        />
-                        <Button
-                            variant="outline"
-                            onClick={() => handleEditToggle("fullName")}
-                        >
-                            {isEditing.fullName ? "Thôi" : "Chỉnh sửa"}
-                        </Button>
-                    </div>
-                </div>
-                {errors.fullName && (
-                    <p className="text-red-500 text-sm">{errors.fullName}</p>
-                )}
+                <Input
+                    disabled
+                    value={`Email của bạn - ${user?.email}` || ""}
+                />
+                <Input
+                    disabled
+                    value={`Loại người dùng - ${user?.role}` || ""}
+                />
 
-                {/* Password */}
-                <div className="mb-3">
-                    <div className="flex items-center justify-between mb-2">
-                        <Label>Mật khẩu</Label>
-                        <Button
-                            variant="outline"
-                            onClick={() => handleEditToggle("password")}
-                        >
-                            {isEditing.password ? "Thôi" : "Chỉnh sửa"}
-                        </Button>
-                    </div>
-                    {isEditing.password && (
+                <Card className="p-4 space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="fullName"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                    <Input {...field} disabled={!isEditName} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <Button type="button" onClick={handleEditName}>
+                        {isEditName ? "Lưu tên" : "Chỉnh sửa tên"}
+                    </Button>
+
+                    {isEditPassword && (
                         <>
-                            <div className="mb-2">
-                                <Input
-                                    type="password"
-                                    value={currentPassword}
-                                    placeholder="Mật khẩu hiện tại"
-                                    onChange={(e) =>
-                                        setCurrentPassword(e.target.value)
-                                    }
-                                />
-                                {errors.currentPassword && (
-                                    <p className="text-red-500 text-sm">
-                                        {errors.currentPassword}
-                                    </p>
+                            <FormField
+                                control={form.control}
+                                name="currentPassword"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Mật khẩu hiện tại</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} type="password" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                            </div>
-                            <div className="mb-2">
-                                <Input
-                                    type="password"
-                                    value={newPassword}
-                                    placeholder="Mật khẩu mới"
-                                    onChange={(e) =>
-                                        setNewPassword(e.target.value)
-                                    }
-                                />
-                                {errors.newPassword && (
-                                    <p className="text-red-500 text-sm">
-                                        {errors.newPassword}
-                                    </p>
+                            />
+                            <FormField
+                                control={form.control}
+                                name="newPassword"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Mật khẩu mới</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} type="password" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                            </div>
-                            <div>
-                                <Input
-                                    type="password"
-                                    value={confirmPassword}
-                                    placeholder="Nhập lại mật khẩu mới"
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)
-                                    }
-                                />
-                                {errors.confirmPassword && (
-                                    <p className="text-red-500 text-sm">
-                                        {errors.confirmPassword}
-                                    </p>
+                            />
+                            <FormField
+                                control={form.control}
+                                name="confirmPassword"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            Nhập lại mật khẩu mới
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input {...field} type="password" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                 )}
-                            </div>
+                            />
                         </>
                     )}
-                </div>
+                    <Button
+                        type="button"
+                        onClick={handleEditPassword}
+                        className="ml-2"
+                    >
+                        {isEditPassword ? "Lưu mật khẩu" : "Chỉnh sửa mật khẩu"}
+                    </Button>
+                </Card>
 
-                {/* Save Button */}
-                <div className="flex justify-end">
-                    <Button onClick={handleSave}>Lưu tất cả</Button>
-                </div>
-            </div>
-        </Card>
+                <Button type="submit">Lưu tất cả thay đổi</Button>
+            </form>
+        </Form>
     );
 }

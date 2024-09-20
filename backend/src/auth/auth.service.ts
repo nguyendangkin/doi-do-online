@@ -114,6 +114,7 @@ export class AuthService {
 
     return {
       message: 'Đăng nhập thành công',
+      email: user.email,
       access_token: accessToken,
     };
   }
