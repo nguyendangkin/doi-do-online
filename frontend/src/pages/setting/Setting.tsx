@@ -20,20 +20,42 @@ import { Card } from "@/components/ui/card";
 
 const formSchema = z
     .object({
-        fullName: z.string().min(2, "Full name must be at least 2 characters"),
-        currentPassword: z
+        fullName: z
             .string()
-            .min(6, "Current password must be at least 6 characters"),
-        newPassword: z
-            .string()
-            .min(6, "New password must be at least 6 characters"),
-        confirmPassword: z
-            .string()
-            .min(6, "Confirm password must be at least 6 characters"),
+            .min(2, "Họ tên phải có ít nhất 2 ký tự")
+            .optional(),
+        currentPassword: z.string().optional(),
+        newPassword: z.string().optional(),
+        confirmPassword: z.string().optional(),
+        avatar: z.any().optional(),
     })
-    .refine((data) => data.newPassword === data.confirmPassword, {
-        message: "Passwords don't match",
-        path: ["confirmPassword"],
+    .superRefine((data, ctx) => {
+        if (data.newPassword) {
+            if (!data.currentPassword) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Vui lòng nhập mật khẩu hiện tại",
+                    path: ["currentPassword"],
+                });
+            }
+            if (data.newPassword.length < 6) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.too_small,
+                    minimum: 6,
+                    type: "string",
+                    inclusive: true,
+                    message: "Mật khẩu mới phải có ít nhất 6 ký tự",
+                    path: ["newPassword"],
+                });
+            }
+            if (data.newPassword !== data.confirmPassword) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: "Mật khẩu không khớp",
+                    path: ["confirmPassword"],
+                });
+            }
+        }
     });
 
 export default function Setting() {
@@ -48,10 +70,11 @@ export default function Setting() {
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            fullName: "",
+            fullName: user?.fullName || "",
             currentPassword: "",
             newPassword: "",
             confirmPassword: "",
+            avatar: null,
         },
     });
 
@@ -86,26 +109,69 @@ export default function Setting() {
         setIsEditPassword(!isEditPassword);
     };
 
-    const onSubmit = async (data: any) => {
-        try {
-            // Implement your update logic here
-            console.log("Form data:", data);
-            // You would typically send this data to your API
-        } catch (error) {
-            console.error("Error updating user data:", error);
-        }
-    };
-
-    const handleAvatarChange = (event: any) => {
-        const file = event.target.files[0];
+    const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
                 if (typeof reader.result === "string") {
                     setAvatarPreview(reader.result);
+                    form.setValue("avatar", file as any);
                 }
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const onSubmit = async (data: any) => {
+        try {
+            const formData = new FormData();
+            let hasChanges = false;
+
+            if (data.fullName && data.fullName !== user.fullName) {
+                formData.append("fullName", data.fullName);
+                hasChanges = true;
+            }
+
+            if (data.newPassword && data.currentPassword) {
+                formData.append("currentPassword", data.currentPassword);
+                formData.append("newPassword", data.newPassword);
+                hasChanges = true;
+            }
+
+            if (data.avatar) {
+                formData.append("avatar", data.avatar);
+                hasChanges = true;
+            }
+
+            if (hasChanges) {
+                console.log(
+                    "Sending updated data:",
+                    Object.fromEntries(formData)
+                );
+                // Gửi request cập nhật
+                // const response = await axiosInstance.patch(`/user/profile/${userEmail}`, formData, {
+                //     headers: { 'Content-Type': 'multipart/form-data' }
+                // });
+                // if (response.data) {
+                //     dispatch(setUserInfo(response.data));
+                //     // Reset form fields sau khi cập nhật thành công
+                //     form.reset({
+                //         fullName: response.data.fullName,
+                //         currentPassword: "",
+                //         newPassword: "",
+                //         confirmPassword: "",
+                //         avatar: null
+                //     });
+                //     setAvatarPreview(null);
+                //     setIsEditName(false);
+                //     setIsEditPassword(false);
+                // }
+            } else {
+                console.log("No changes detected");
+            }
+        } catch (error) {
+            console.error("Error updating user data:", error);
         }
     };
 
@@ -147,7 +213,7 @@ export default function Setting() {
                         name="fullName"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Full Name</FormLabel>
+                                <FormLabel>Tên đầy đủ</FormLabel>
                                 <FormControl>
                                     <Input {...field} disabled={!isEditName} />
                                 </FormControl>
