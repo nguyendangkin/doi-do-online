@@ -88,9 +88,7 @@ export default function Setting() {
         const fetchUserData = async () => {
             if (userEmail) {
                 try {
-                    const response = await axiosInstance.get(
-                        `/user/profile/${userEmail}`
-                    );
+                    const response = await axiosInstance.get(`/user/profile`);
                     dispatch(setUserInfo(response.data));
                 } catch (error) {
                     console.error("Error fetching user data:", error);
@@ -150,23 +148,27 @@ export default function Setting() {
                     Object.fromEntries(formData)
                 );
                 // Gửi request cập nhật
-                // const response = await axiosInstance.patch(`/user/profile/${userEmail}`, formData, {
-                //     headers: { 'Content-Type': 'multipart/form-data' }
-                // });
-                // if (response.data) {
-                //     dispatch(setUserInfo(response.data));
-                //     // Reset form fields sau khi cập nhật thành công
-                //     form.reset({
-                //         fullName: response.data.fullName,
-                //         currentPassword: "",
-                //         newPassword: "",
-                //         confirmPassword: "",
-                //         avatar: null
-                //     });
-                //     setAvatarPreview(null);
-                //     setIsEditName(false);
-                //     setIsEditPassword(false);
-                // }
+                const response = await axiosInstance.patch(
+                    `/user/profile`,
+                    formData,
+                    {
+                        headers: { "Content-Type": "multipart/form-data" },
+                    }
+                );
+                if (response.data) {
+                    dispatch(setUserInfo(response.data));
+                    // Reset form fields sau khi cập nhật thành công
+                    form.reset({
+                        fullName: response.data.fullName,
+                        currentPassword: "",
+                        newPassword: "",
+                        confirmPassword: "",
+                        avatar: null,
+                    });
+                    setAvatarPreview(null);
+                    setIsEditName(false);
+                    setIsEditPassword(false);
+                }
             } else {
                 console.log("No changes detected");
             }
