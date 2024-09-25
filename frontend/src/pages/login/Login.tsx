@@ -50,8 +50,10 @@ export default function Login() {
 
             dispatch(setUser(responsive.data));
             toast.success(responsive.data.message);
-            navigate("/");
+            // navigate("/");
         } catch (error: any) {
+            console.log(error);
+
             toast.error(error);
         } finally {
             setIsLoading(false);

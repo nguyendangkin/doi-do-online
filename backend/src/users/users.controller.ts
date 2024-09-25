@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -31,15 +32,28 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Patch('profile')
   @Roles(Role.User, Role.Admin)
-  @UseInterceptors(FileInterceptor('avatar')) // Sử dụng interceptor để xử lý file
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      fileFilter: (req, file, callback) => {
+        const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('File ảnh không hợp lệ!'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
   async updateUser(
     @User() user: { email: string },
     @Body() updateUser: UpdateUserDto,
     @UploadedFile() avatar: Express.Multer.File,
   ) {
-    console.log(updateUser); // Các trường như fullName, currentPassword
-    console.log(avatar); // Tệp avatar nếu có
+    // console.log(updateUser); // Các trường như fullName, currentPassword
+    // console.log(avatar); // Tệp avatar nếu có
 
-    return 1;
+    return this.usersService.updateUser(user, updateUser, avatar);
   }
 }

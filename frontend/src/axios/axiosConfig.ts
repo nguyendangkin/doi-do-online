@@ -48,11 +48,11 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
 
-        if (error.response.status === 401) {
-            // Xử lý lỗi 401: Đăng xuất và chuyển hướng đến trang đăng nhập
-            handleLogout();
-            return Promise.reject(error);
-        }
+        // if (error.response.status === 401) {
+        //     // Xử lý lỗi 401: Đăng xuất và chuyển hướng đến trang đăng nhập
+        //     handleLogout();
+        //     return Promise.reject(error);
+        // }
 
         // Nếu lỗi là 402 và chưa thử refresh token
         if (error.response.status === 402 && !originalRequest._retry) {

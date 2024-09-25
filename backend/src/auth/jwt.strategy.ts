@@ -1,6 +1,11 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -15,15 +20,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     if (!payload) {
-      throw new UnauthorizedException('Invalid token');
+      throw new HttpException('Token không hợp lệ', HttpStatus.FORBIDDEN);
     }
 
-    // Kiểm tra thời gian hết hạn
     const currentTimestamp = Math.floor(Date.now() / 1000);
     if (payload.exp && payload.exp < currentTimestamp) {
-      throw new UnauthorizedException('Token expired');
+      throw new HttpException('Token hết hạn', HttpStatus.PAYMENT_REQUIRED);
     }
-
     return { id: payload.id, email: payload.email, role: payload.role };
   }
 }

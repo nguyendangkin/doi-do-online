@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 const formSchema = z
     .object({
@@ -61,11 +62,13 @@ const formSchema = z
 export default function Setting() {
     const dispatch = useDispatch();
     const user = useSelector((state: any) => state?.user?.user);
-    const userEmail = useSelector((state: any) => state?.auth?.user?.email);
 
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [isEditName, setIsEditName] = useState(false);
     const [isEditPassword, setIsEditPassword] = useState(false);
+    const [fullAvatarUrl, setFullAvatarUrl] = useState("");
+
+    const baseUrl = import.meta.env.VITE_API_URL || "";
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -83,21 +86,26 @@ export default function Setting() {
             form.setValue("fullName", user.fullName);
         }
     }, [user, form]);
+    useEffect(() => {
+        if (user?.avatarUrl) {
+            // Thêm base URL của server nếu cần
+            // const baseUrl = "http://localhost:3000" || ""; // Đảm bảo bạn đã set biến môi trường này
+            setFullAvatarUrl(`${baseUrl}${user.avatarUrl}`);
+        }
+    }, [dispatch]);
 
     useEffect(() => {
         const fetchUserData = async () => {
-            if (userEmail) {
-                try {
-                    const response = await axiosInstance.get(`/user/profile`);
-                    dispatch(setUserInfo(response.data));
-                } catch (error) {
-                    console.error("Error fetching user data:", error);
-                }
+            try {
+                const response = await axiosInstance.get(`/user/profile`);
+                dispatch(setUserInfo(response.data));
+            } catch (error) {
+                console.error("Error fetching user data:", error);
             }
         };
 
         fetchUserData();
-    }, [userEmail, dispatch]);
+    }, [dispatch]);
 
     const handleEditName = () => {
         setIsEditName(!isEditName);
@@ -168,12 +176,14 @@ export default function Setting() {
                     setAvatarPreview(null);
                     setIsEditName(false);
                     setIsEditPassword(false);
+                    toast.success("Cập nhật thông tin thành công");
                 }
             } else {
                 console.log("No changes detected");
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating user data:", error);
+            toast.error(error);
         }
     };
 
@@ -185,7 +195,7 @@ export default function Setting() {
                         <AvatarImage
                             src={
                                 avatarPreview ||
-                                user?.avatarUrl ||
+                                fullAvatarUrl ||
                                 "https://github.com/shadcn.png"
                             }
                         />
@@ -215,7 +225,7 @@ export default function Setting() {
                         name="fullName"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Tên đầy đủ</FormLabel>
+                                <FormLabel>Thông Tin Cá Nhân</FormLabel>
                                 <FormControl>
                                     <Input {...field} disabled={!isEditName} />
                                 </FormControl>

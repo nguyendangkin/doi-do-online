@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    user: null,
+    user: null as { avatarUrl: string | null } | null, // Định
 };
 
 export const authSlice = createSlice({

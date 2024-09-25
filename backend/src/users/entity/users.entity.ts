@@ -17,4 +17,7 @@ export class Users {
 
   @Column({ default: Role.User })
   role: Role;
+
+  @Column({ nullable: true })
+  avatarUrl: string;
 }

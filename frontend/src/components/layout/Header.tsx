@@ -4,7 +4,6 @@ import { FaBoxes, FaSearch } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDispatch, useSelector } from "react-redux";
-
 import axiosInstance from "@/axios/axiosConfig";
 import { logout } from "@/redux/authSlice";
 import { persistor } from "@/redux/store";
@@ -25,11 +24,15 @@ export default function Header() {
         (state: any) => state?.auth?.user?.access_token
     );
 
+    const avatarUrl = useSelector((state: any) => state?.user?.user?.avatarUrl);
+    const hostApi = import.meta.env.VITE_API_URL;
+
     const handleLogout = async () => {
         try {
-            await persistor.purge();
             await axiosInstance.get("/auth/logout");
             dispatch(logout());
+            await persistor.purge();
+            localStorage.clear();
             navigate("/");
         } catch (error) {
             console.log(error);
@@ -59,7 +62,12 @@ export default function Header() {
                         <DropdownMenu>
                             <DropdownMenuTrigger>
                                 <Avatar>
-                                    <AvatarImage src="https://github.com/shadcn.png" />
+                                    <AvatarImage
+                                        src={
+                                            `${hostApi}${avatarUrl}` ||
+                                            "https://github.com/shadcn.png"
+                                        }
+                                    />
                                     <AvatarFallback>CN</AvatarFallback>
                                 </Avatar>
                             </DropdownMenuTrigger>
