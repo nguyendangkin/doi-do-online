@@ -1,6 +1,7 @@
 import App from "@/App";
 import Home from "@/pages/home/Home";
 import Login from "@/pages/login/Login";
+import MyStore from "@/pages/myStore/MyStore";
 import NotFound from "@/pages/notFound/NotFound";
 import Register from "@/pages/register/Register";
 import Setting from "@/pages/setting/Setting";
@@ -37,6 +38,15 @@ export default function AppRouter() {
                         element={
                             <ProtectedRoute>
                                 <Setting />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="kho-cua-toi"
+                        element={
+                            <ProtectedRoute>
+                                <MyStore />
                             </ProtectedRoute>
                         }
                     />
