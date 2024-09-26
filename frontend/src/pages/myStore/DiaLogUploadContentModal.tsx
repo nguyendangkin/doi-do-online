@@ -12,6 +12,7 @@ import { X } from "lucide-react";
 
 const DiaLogUploadContentModal = () => {
     const [images, setImages] = useState<File[]>([]);
+    const [content, setContent] = useState<string>("");
 
     useEffect(() => {
         return () => {
@@ -39,6 +40,20 @@ const DiaLogUploadContentModal = () => {
             URL.revokeObjectURL(URL.createObjectURL(prevImages[index]));
             return updatedImages;
         });
+    };
+
+    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setContent(e.target.value);
+    };
+
+    const handleSubmit = async () => {
+        // Fake API call
+        const formData = new FormData();
+        images.forEach((image) => {
+            formData.append("images", image);
+        });
+        formData.append("content", content);
+        console.log("check", formData);
     };
 
     return (
@@ -103,9 +118,14 @@ const DiaLogUploadContentModal = () => {
                         className="w-full p-2 border border-gray-300 rounded text-sm"
                         placeholder="Nhập nội dung..."
                         maxLength={250}
+                        value={content}
+                        onChange={handleContentChange}
                     ></textarea>
 
-                    <button className="mt-4 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200 text-sm">
+                    <button
+                        onClick={handleSubmit}
+                        className="mt-4 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200 text-sm"
+                    >
                         Gửi
                     </button>
                 </DialogContent>
