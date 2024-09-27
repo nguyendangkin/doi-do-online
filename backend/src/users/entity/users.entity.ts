@@ -1,5 +1,7 @@
+import { Post } from '@nestjs/common';
 import { Role } from 'src/auth/enums/role.enum';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Posts } from 'src/posts/entity/post.entity';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 
 @Entity()
 export class Users {
@@ -20,4 +22,7 @@ export class Users {
 
   @Column({ nullable: true })
   avatarUrl: string;
+
+  @OneToMany(() => Posts, (post) => post.user)
+  post: Posts[];
 }

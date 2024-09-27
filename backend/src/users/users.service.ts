@@ -93,8 +93,6 @@ export class UsersService {
       throw new BadRequestException('User not found');
     }
 
-    console.log(userEntity);
-
     // Xác thực mật khẩu hiện tại
     if (
       currentPassword &&

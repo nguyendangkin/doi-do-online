@@ -8,12 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { CgAdd } from "react-icons/cg";
 import { Card } from "@/components/ui/card";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
 import axiosInstance from "@/axios/axiosConfig";
+import { Button } from "@/components/ui/button";
 
 const DiaLogUploadContentModal = () => {
     const [images, setImages] = useState<File[]>([]);
     const [content, setContent] = useState<string>("");
+    const [error, setError] = useState<string>("");
+    const [isOpen, setIsOpen] = useState(false); // State để điều khiển modal
 
     useEffect(() => {
         return () => {
@@ -28,10 +31,11 @@ const DiaLogUploadContentModal = () => {
         if (files) {
             const fileArray = Array.from(files);
             if (images.length + fileArray.length > 10) {
-                alert("Bạn chỉ được chọn tối đa 10 ảnh.");
+                setError("Bạn chỉ được chọn tối đa 10 ảnh.");
                 return;
             }
             setImages((prevImages) => [...prevImages, ...fileArray]);
+            setError("");
         }
     };
 
@@ -48,6 +52,11 @@ const DiaLogUploadContentModal = () => {
     };
 
     const handleSubmit = async () => {
+        if (images.length === 0 || content.trim() === "") {
+            setError("Vui lòng chọn ít nhất 1 ảnh và nhập nội dung.");
+            return;
+        }
+
         const formData = new FormData();
         images.forEach((image) => {
             formData.append("images", image);
@@ -57,14 +66,20 @@ const DiaLogUploadContentModal = () => {
         try {
             const result = await axiosInstance.post("/posts", formData);
             console.log(result);
+            // Reset form after successful submission
+            setImages([]);
+            setContent("");
+            setError("");
+            setIsOpen(false);
         } catch (error) {
             console.log(error);
+            setError("Có lỗi xảy ra khi gửi dữ liệu. Vui lòng thử lại.");
         }
     };
 
     return (
         <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer flex justify-center items-center">
-            <Dialog>
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
                     <div className="w-full h-full flex justify-center items-center">
                         <CgAdd className="text-4xl" />
@@ -73,8 +88,8 @@ const DiaLogUploadContentModal = () => {
                 <DialogContent className="p-6">
                     <DialogTitle>Nhập thông tin</DialogTitle>
                     <DialogDescription>
-                        Bạn có thể thêm tối đa 10 ảnh và nhập nội dung tối đa 50
-                        từ.
+                        Bạn cần chọn ít nhất 1 ảnh và nhập nội dung (tối đa 50
+                        từ).
                     </DialogDescription>
 
                     <div className="mb-4">
@@ -102,18 +117,29 @@ const DiaLogUploadContentModal = () => {
                     </div>
 
                     {images.length < 10 && (
-                        <>
-                            <label className="block mb-2 text-sm font-medium">
-                                Nhập ảnh (Tối đa 10 ảnh):
+                        <div className="mb-4">
+                            <label
+                                htmlFor="file-upload"
+                                className="cursor-pointer"
+                            >
+                                <div className="flex items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition-colors duration-200">
+                                    <div className="flex flex-col items-center">
+                                        <Upload className="w-8 h-8 text-gray-400" />
+                                        <span className="mt-2 text-sm text-gray-500">
+                                            Tải ảnh lên (Tối đa 10 ảnh)
+                                        </span>
+                                    </div>
+                                </div>
+                                <input
+                                    id="file-upload"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    className="hidden"
+                                    onChange={handleImageChange}
+                                />
                             </label>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                multiple
-                                className="mb-4 w-full p-2 border border-gray-300 rounded text-sm"
-                                onChange={handleImageChange}
-                            />
-                        </>
+                        </div>
                     )}
 
                     <label className="block mb-2 text-sm font-medium">
@@ -128,12 +154,13 @@ const DiaLogUploadContentModal = () => {
                         onChange={handleContentChange}
                     ></textarea>
 
-                    <button
-                        onClick={handleSubmit}
-                        className="mt-4 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition duration-200 text-sm"
-                    >
+                    {error && (
+                        <p className="text-red-500 text-sm mt-2">{error}</p>
+                    )}
+
+                    <Button onClick={handleSubmit} className="mt-4 w-full">
                         Gửi
-                    </button>
+                    </Button>
                 </DialogContent>
             </Dialog>
         </Card>
