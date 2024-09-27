@@ -9,6 +9,7 @@ import {
 import { CgAdd } from "react-icons/cg";
 import { Card } from "@/components/ui/card";
 import { X } from "lucide-react";
+import axiosInstance from "@/axios/axiosConfig";
 
 const DiaLogUploadContentModal = () => {
     const [images, setImages] = useState<File[]>([]);
@@ -47,13 +48,18 @@ const DiaLogUploadContentModal = () => {
     };
 
     const handleSubmit = async () => {
-        // Fake API call
         const formData = new FormData();
         images.forEach((image) => {
             formData.append("images", image);
         });
         formData.append("content", content);
-        console.log("check", formData);
+
+        try {
+            const result = await axiosInstance.post("/posts", formData);
+            console.log(result);
+        } catch (error) {
+            console.log(error);
+        }
     };
 
     return (
