@@ -68,7 +68,8 @@ export default function Setting() {
     const [isEditPassword, setIsEditPassword] = useState(false);
     const [fullAvatarUrl, setFullAvatarUrl] = useState("");
 
-    const baseUrl = import.meta.env.VITE_API_URL || "";
+    const hostApi = import.meta.env.VITE_API_URL;
+    const avatarUrl = useSelector((state: any) => state?.user?.user?.avatarUrl);
 
     const form = useForm({
         resolver: zodResolver(formSchema),
@@ -86,13 +87,6 @@ export default function Setting() {
             form.setValue("fullName", user.fullName);
         }
     }, [user, form]);
-    useEffect(() => {
-        if (user?.avatarUrl) {
-            // Thêm base URL của server nếu cần
-            // const baseUrl = "http://localhost:3000" || ""; // Đảm bảo bạn đã set biến môi trường này
-            setFullAvatarUrl(`${baseUrl}${user.avatarUrl}`);
-        }
-    }, [dispatch]);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -195,7 +189,7 @@ export default function Setting() {
                         <AvatarImage
                             src={
                                 avatarPreview ||
-                                fullAvatarUrl ||
+                                `${hostApi}${avatarUrl}` ||
                                 "https://github.com/shadcn.png"
                             }
                         />

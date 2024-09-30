@@ -8,7 +8,7 @@ import userSlice from "@/redux/userSlice";
 const persistConfig = {
     key: "root",
     storage,
-    whitelist: ["auth", "user"], // Chỉ định những reducer nào cần được persist
+    whitelist: ["auth"], // Chỉ định những reducer nào cần được persist
 };
 
 // Kết hợp các reducer

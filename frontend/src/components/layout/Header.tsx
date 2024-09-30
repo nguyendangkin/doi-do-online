@@ -16,6 +16,8 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useEffect } from "react";
+import { setUserInfo } from "@/redux/userSlice";
 
 export default function Header() {
     const dispatch = useDispatch();
@@ -23,6 +25,22 @@ export default function Header() {
     const accessToken = useSelector(
         (state: any) => state?.auth?.user?.access_token
     );
+
+    useEffect(() => {
+        if (accessToken) {
+            const fetchUserData = async () => {
+                try {
+                    const response = await axiosInstance.get(`/user/profile`);
+                    dispatch(setUserInfo(response.data));
+                } catch (error) {
+                    console.error("Error fetching user data:", error);
+                }
+            };
+            console.log(1);
+
+            fetchUserData();
+        }
+    }, []);
 
     const avatarUrl = useSelector((state: any) => state?.user?.user?.avatarUrl);
     const hostApi = import.meta.env.VITE_API_URL;
