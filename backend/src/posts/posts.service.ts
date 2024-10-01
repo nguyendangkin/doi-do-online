@@ -6,11 +6,13 @@ import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import { UsersService } from 'src/users/users.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Posts) private postsRepository: Repository<Posts>,
+    private usersService: UsersService,
   ) {}
 
   async uploadImages(images: Array<Express.Multer.File>): Promise<string[]> {
@@ -46,5 +48,17 @@ export class PostsService {
     });
 
     return this.postsRepository.save(post);
+  }
+
+  async getPosts(user) {
+    const foundUser = await this.usersService.findOneUserByEmail(user.email);
+
+    if (!foundUser) {
+      throw new Error('Không thấy user');
+    }
+
+    return this.postsRepository.find({
+      where: { user: { id: foundUser.id } },
+    });
   }
 }

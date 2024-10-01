@@ -12,7 +12,13 @@ import { X, Upload } from "lucide-react";
 import axiosInstance from "@/axios/axiosConfig";
 import { Button } from "@/components/ui/button";
 
-const DiaLogUploadContentModal = () => {
+interface DiaLogUploadContentModalProps {
+    onPostAdded: () => void; // Chỉ định kiểu cho onPostAdded
+}
+
+const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
+    onPostAdded,
+}) => {
     const [images, setImages] = useState<File[]>([]);
     const [content, setContent] = useState<string>("");
     const [error, setError] = useState<string>("");
@@ -25,6 +31,8 @@ const DiaLogUploadContentModal = () => {
             );
         };
     }, [images]);
+
+    /// http://localhost:3000/posts/tags
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -64,8 +72,9 @@ const DiaLogUploadContentModal = () => {
         formData.append("content", content);
 
         try {
-            const result = await axiosInstance.post("/posts", formData);
-            console.log(result);
+            await axiosInstance.post("/posts", formData);
+            // Gọi callback sau khi bài viết đã được thêm
+            onPostAdded();
             // Reset form after successful submission
             setImages([]);
             setContent("");
