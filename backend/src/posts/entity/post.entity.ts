@@ -12,6 +12,9 @@ export class Posts {
   @Column('text')
   content: string;
 
+  @Column({ nullable: true }) // cho phép giá trị NULL
+  tag: string;
+
   @ManyToOne(() => Users, (user) => user.post, { onDelete: 'CASCADE' })
   user: Users;
 }

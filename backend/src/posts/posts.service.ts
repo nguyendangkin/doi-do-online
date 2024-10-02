@@ -45,6 +45,7 @@ export class PostsService {
       content: createPostData.content,
       images: imagePaths,
       user: user.id,
+      tag: createPostData.tag, // Thêm tag vào post
     });
 
     return this.postsRepository.save(post);

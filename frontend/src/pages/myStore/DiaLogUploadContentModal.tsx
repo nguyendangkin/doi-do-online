@@ -11,9 +11,16 @@ import { Card } from "@/components/ui/card";
 import { X, Upload } from "lucide-react";
 import axiosInstance from "@/axios/axiosConfig";
 import { Button } from "@/components/ui/button";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface DiaLogUploadContentModalProps {
-    onPostAdded: () => void; // Chỉ định kiểu cho onPostAdded
+    onPostAdded: () => void;
 }
 
 const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
@@ -22,17 +29,28 @@ const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
     const [images, setImages] = useState<File[]>([]);
     const [content, setContent] = useState<string>("");
     const [error, setError] = useState<string>("");
-    const [isOpen, setIsOpen] = useState(false); // State để điều khiển modal
+    const [isOpen, setIsOpen] = useState(false);
+    const [tags, setTags] = useState<string[]>([]);
+    const [selectedTag, setSelectedTag] = useState<string>("");
 
     useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const response = await axiosInstance.get("/posts/tags");
+                setTags(response.data);
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+            }
+        };
+
+        fetchTags();
+
         return () => {
             images.forEach((image) =>
                 URL.revokeObjectURL(URL.createObjectURL(image))
             );
         };
     }, [images]);
-
-    /// http://localhost:3000/posts/tags
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
@@ -59,9 +77,15 @@ const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
         setContent(e.target.value);
     };
 
+    const handleTagChange = (value: string) => {
+        setSelectedTag(value);
+    };
+
     const handleSubmit = async () => {
-        if (images.length === 0 || content.trim() === "") {
-            setError("Vui lòng chọn ít nhất 1 ảnh và nhập nội dung.");
+        if (images.length === 0 || content.trim() === "" || !selectedTag) {
+            setError(
+                "Vui lòng chọn ít nhất 1 ảnh, nhập nội dung và chọn 1 tag."
+            );
             return;
         }
 
@@ -70,18 +94,18 @@ const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
             formData.append("images", image);
         });
         formData.append("content", content);
+        formData.append("tag", selectedTag);
 
         try {
             await axiosInstance.post("/posts", formData);
-            // Gọi callback sau khi bài viết đã được thêm
             onPostAdded();
-            // Reset form after successful submission
             setImages([]);
             setContent("");
+            setSelectedTag("");
             setError("");
             setIsOpen(false);
         } catch (error) {
-            console.log(error);
+            console.error(error);
             setError("Có lỗi xảy ra khi gửi dữ liệu. Vui lòng thử lại.");
         }
     };
@@ -94,11 +118,11 @@ const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
                         <CgAdd className="text-4xl" />
                     </div>
                 </DialogTrigger>
-                <DialogContent className="p-6">
+                <DialogContent className="p-6 max-w-md w-full">
                     <DialogTitle>Nhập thông tin</DialogTitle>
                     <DialogDescription>
-                        Bạn cần chọn ít nhất 1 ảnh và nhập nội dung (tối đa 50
-                        từ).
+                        Bạn cần chọn ít nhất 1 ảnh, nhập nội dung (tối đa 50 từ)
+                        và chọn 1 tag.
                     </DialogDescription>
 
                     <div className="mb-4">
@@ -162,6 +186,27 @@ const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
                         value={content}
                         onChange={handleContentChange}
                     ></textarea>
+
+                    <div className="mt-4">
+                        <label className="block mb-2 text-sm font-medium">
+                            Chọn tag:
+                        </label>
+                        <Select
+                            onValueChange={handleTagChange}
+                            value={selectedTag}
+                        >
+                            <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Chọn một tag" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tags.map((tag) => (
+                                    <SelectItem key={tag} value={tag}>
+                                        {tag}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
 
                     {error && (
                         <p className="text-red-500 text-sm mt-2">{error}</p>
