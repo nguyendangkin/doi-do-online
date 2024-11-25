@@ -38,6 +38,7 @@ export class PostsController {
           'image/png',
           'image/gif',
           'image/jpg',
+          'image/webp',
         ];
         if (!allowedMimeTypes.includes(file.mimetype)) {
           return callback(

@@ -114,7 +114,7 @@ const DiaLogUploadContentModal: React.FC<DiaLogUploadContentModalProps> = ({
         <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer flex justify-center items-center">
             <Dialog open={isOpen} onOpenChange={setIsOpen}>
                 <DialogTrigger asChild>
-                    <div className="w-full h-full flex justify-center items-center">
+                    <div className="w-full h-full p-[30px] flex justify-center items-center">
                         <CgAdd className="text-4xl" />
                     </div>
                 </DialogTrigger>
