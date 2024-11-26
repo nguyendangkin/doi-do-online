@@ -4,19 +4,20 @@ import DiaLogUploadContentModal from "@/pages/myStore/DiaLogUploadContentModal";
 import axiosInstance from "@/axios/axiosConfig";
 import DialogViewEditPost from "@/pages/myStore/DialogViewEditPost";
 
-interface Posts {
+interface Post {
     id: number;
     content: string;
     images: string[];
-    tag: string; // Đây là t
+    tag: string;
 }
 
 export default function MyStore() {
-    const [posts, setPosts] = useState<Posts[]>([]); // State for posts
-    const [selectedPost, setSelectedPost] = useState<Posts | null>(null); // State for selected post
-    const [dialogOpen, setDialogOpen] = useState<boolean>(false); // State to control dialog visibility
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [dialogOpen, setDialogOpen] = useState<boolean>(false);
     const hostApi = import.meta.env.VITE_API_URL;
 
+    // Fetch posts from API
     const fetchPosts = async () => {
         try {
             const response = await axiosInstance.get("/posts");
@@ -30,22 +31,10 @@ export default function MyStore() {
         fetchPosts();
     }, []);
 
-    // Handle opening the dialog with the selected post
-    const handleOpenDialogEditPost = (post: Posts) => {
-        setSelectedPost(post); // Set the selected post
-        setDialogOpen(true); // Open the dialog
-    };
-
-    // Handle saving the updated post data
-    const handleSavePost = async (updatedPost: Posts) => {
-        try {
-            await axiosInstance.put(`/posts/${updatedPost.id}`, updatedPost);
-
-            setDialogOpen(false); // Close the dialog after saving
-            fetchPosts(); // Refresh the post list
-        } catch (error) {
-            console.error("Error saving the post:", error);
-        }
+    // Open dialog for editing post
+    const handleOpenDialogEditPost = (post: Post) => {
+        setSelectedPost(post);
+        setDialogOpen(true);
     };
 
     return (
@@ -56,7 +45,7 @@ export default function MyStore() {
                     <Card
                         key={post.id}
                         className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer"
-                        onClick={() => handleOpenDialogEditPost(post)} // Pass the post to the dialog
+                        onClick={() => handleOpenDialogEditPost(post)}
                     >
                         <CardHeader>
                             <img
@@ -76,8 +65,8 @@ export default function MyStore() {
                 <DialogViewEditPost
                     post={selectedPost}
                     open={dialogOpen}
-                    onClose={() => setDialogOpen(false)} // Close the dialog
-                    onSave={handleSavePost} // Save the changes
+                    onClose={() => setDialogOpen(false)}
+                    onSuccess={fetchPosts}
                 />
             )}
         </div>

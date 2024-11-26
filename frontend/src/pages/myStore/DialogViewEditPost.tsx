@@ -20,27 +20,30 @@ interface Post {
     id: number;
     content: string;
     images: string[];
-    tag: string; // Add tag field
+    tag: string;
 }
 
 interface DialogViewEditPostProps {
     post: Post;
     open: boolean;
     onClose: () => void;
-    onSave: (updatedPost: Post) => void;
+    onSuccess: () => void;
 }
+
+type ImageItem = string | File;
 
 const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
     post,
     open,
     onClose,
-    onSave,
+    onSuccess,
 }) => {
     const [content, setContent] = useState(post.content);
-    const [images, setImages] = useState(post.images);
+    const [images, setImages] = useState<ImageItem[]>(post.images);
     const [error, setError] = useState<string>("");
     const [tags, setTags] = useState<string[]>([]);
     const [selectedTag, setSelectedTag] = useState<string>(post.tag);
+    const [isLoading, setIsLoading] = useState(false);
 
     const hostApi = import.meta.env.VITE_API_URL;
 
@@ -71,66 +74,78 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                 return;
             }
 
-            const imageUrls = fileArray.map((file) =>
-                URL.createObjectURL(file)
-            );
-            setImages((prev) => [...prev, ...imageUrls]);
-            setError(""); // Clear error message
+            setImages((prev) => [...prev, ...(fileArray as File[])]);
+            setError("");
         }
-    };
-
-    const imageToFile = async (
-        blobUrl: string,
-        fileName: string
-    ): Promise<File> => {
-        const response = await fetch(blobUrl);
-        const blob = await response.blob();
-        const file = new File([blob], fileName, { type: blob.type });
-        return file;
     };
 
     const handleSave = async () => {
-        if (!content.trim() || images.length === 0 || !selectedTag) {
-            setError(
-                "Vui lòng nhập nội dung, ít nhất một hình ảnh và chọn tag."
-            );
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append("content", content);
-        formData.append("tag", selectedTag);
-
-        // Append images to formData
-        for (let i = 0; i < images.length; i++) {
-            const image = images[i];
-            if (image.startsWith("blob:")) {
-                const fileName = `image_${i}.jpg`; // Set an appropriate file name
-                const file = await imageToFile(image, fileName); // Convert blob URL to File
-                formData.append("images", file);
-            } else {
-                // If it's not a blob URL (i.e., it's a server path), you can append it as-is
-                formData.append("images", image);
+        try {
+            if (!content.trim() || images.length === 0 || !selectedTag) {
+                setError(
+                    "Vui lòng nhập nội dung, ít nhất một hình ảnh và chọn tag."
+                );
+                return;
             }
-        }
 
-        onSave({ ...post, content, images, tag: selectedTag });
-        onClose();
+            setIsLoading(true);
+
+            // Create FormData for the API request
+            const formData = new FormData();
+
+            // Add existing images that are Files
+            images.forEach((image) => {
+                if (image instanceof File) {
+                    formData.append("images", image);
+                }
+            });
+
+            // Add the content and tag
+            formData.append("content", content);
+            formData.append("tag", selectedTag);
+
+            // Send the update request
+            await axiosInstance.put(`/posts/${post.id}`, formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+
+            // Call onSuccess to refresh the posts list
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error("Error saving post:", error);
+            setError("Có lỗi xảy ra khi lưu bài viết. Vui lòng thử lại.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleImageRemove = (index: number) => {
-        const updatedImages = [...images];
-        const removedImage = updatedImages.splice(index, 1);
+        setImages((prev) => {
+            const updatedImages = [...prev];
+            const removedImage = updatedImages[index];
 
-        if (removedImage[0] && !removedImage[0].startsWith("http")) {
-            URL.revokeObjectURL(removedImage[0]);
-        }
+            // Revoke object URL if it's a File
+            if (removedImage instanceof File) {
+                URL.revokeObjectURL(URL.createObjectURL(removedImage));
+            }
 
-        setImages(updatedImages);
+            updatedImages.splice(index, 1);
+            return updatedImages;
+        });
     };
 
     const handleTagChange = (value: string) => {
         setSelectedTag(value);
+    };
+
+    const getImageUrl = (image: ImageItem): string => {
+        if (image instanceof File) {
+            return URL.createObjectURL(image);
+        }
+        return image.startsWith("http") ? image : `${hostApi}${image}`;
     };
 
     return (
@@ -164,12 +179,7 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                         {images.map((image, index) => (
                             <div key={index} className="relative group">
                                 <img
-                                    src={
-                                        image.startsWith("http") ||
-                                        image.startsWith("blob:")
-                                            ? image
-                                            : `${hostApi}${image}`
-                                    }
+                                    src={getImageUrl(image)}
                                     alt={`Hình ảnh ${index + 1}`}
                                     className="w-full h-32 object-cover rounded-lg shadow"
                                 />
@@ -237,15 +247,17 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                     <Button
                         variant="outline"
                         onClick={onClose}
+                        disabled={isLoading}
                         className="w-1/3 border border-gray-300 hover:border-gray-500 hover:text-gray-700"
                     >
                         Hủy
                     </Button>
                     <Button
                         onClick={handleSave}
+                        disabled={isLoading}
                         className="w-1/3 bg-blue-500 text-white hover:bg-blue-600"
                     >
-                        Lưu thay đổi
+                        {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
                     </Button>
                 </div>
             </DialogContent>
