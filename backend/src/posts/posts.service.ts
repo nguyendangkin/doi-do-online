@@ -62,4 +62,17 @@ export class PostsService {
       where: { user: { id: foundUser.id } },
     });
   }
+
+  async updatePost(user, createPostData: CreatePostDto, images) {
+    const imagePaths = await this.uploadImages(images); // Gọi hàm uploadImages
+
+    const post = this.postsRepository.create({
+      content: createPostData.content,
+      images: imagePaths,
+      user: user.id,
+      tag: createPostData.tag, // Thêm tag vào post
+    });
+
+    return this.postsRepository.save(post);
+  }
 }

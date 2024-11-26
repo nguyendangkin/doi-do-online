@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   UploadedFile,
   UploadedFiles,
   UseGuards,
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { tagsProducts } from 'src/posts/data/tags';
 import { CreatePostDto } from 'src/posts/dto/postDto.dto';
+import { UpdatePostDto } from 'src/posts/dto/updateDto.dto copy';
 import { PostsService } from 'src/posts/posts.service';
 import { UsersService } from 'src/users/users.service';
 
@@ -72,5 +74,38 @@ export class PostsController {
   @Roles(Role.User, Role.Admin)
   async getAllTag(@User() user: { email: string }) {
     return tagsProducts;
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Put()
+  @Roles(Role.User, Role.Admin)
+  @UseInterceptors(
+    FilesInterceptor('images', 10, {
+      fileFilter: (req, file, callback) => {
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/png',
+          'image/gif',
+          'image/jpg',
+          'image/webp',
+        ];
+        if (!allowedMimeTypes.includes(file.mimetype)) {
+          return callback(
+            new BadRequestException('File ảnh không hợp lệ!'),
+            false,
+          );
+        }
+        callback(null, true);
+      },
+    }),
+  )
+  async updatePost(
+    @User() user: { email: string },
+    @Body() updatePostData: UpdatePostDto,
+    @UploadedFiles() images: Array<Express.Multer.File>, // Chắc chắn rằng bạn sử dụng @UploadedFiles() để nhận nhiều file
+  ) {
+    console.log(updatePostData); // Kiểm tra lại log của content
+    console.log(images); // Log danh sách file
+    return this.postsService.updatePost(user, updatePostData, images);
   }
 }
