@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from 'src/posts/dto/postDto.dto';
 import { Posts } from 'src/posts/entity/post.entity';
@@ -7,6 +11,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { UsersService } from 'src/users/users.service';
+import { UpdatePostDto } from 'src/posts/dto/updateDto.dto copy';
+import { Role } from 'src/auth/enums/role.enum';
 
 @Injectable()
 export class PostsService {
@@ -63,16 +69,41 @@ export class PostsService {
     });
   }
 
-  async updatePost(user, createPostData: CreatePostDto, images) {
-    const imagePaths = await this.uploadImages(images); // Gọi hàm uploadImages
-
-    const post = this.postsRepository.create({
-      content: createPostData.content,
-      images: imagePaths,
-      user: user.id,
-      tag: createPostData.tag, // Thêm tag vào post
+  async updatePost(
+    idPost: number,
+    user,
+    updatePostData: UpdatePostDto,
+    images,
+  ) {
+    // Tìm bài viết theo id
+    const post = await this.postsRepository.findOne({
+      where: { id: idPost }, // Tìm kiếm bài viết theo id\
+      relations: ['user'], // Đảm bảo rằng bạn lấy thông tin người dùng liên quan
     });
 
+    if (!post) {
+      throw new NotFoundException('Bài viết không tồn tại!');
+    }
+
+    // Kiểm tra xem người dùng có quyền cập nhật bài viết này không
+    if (post.user.id !== user.id && user.role !== Role.Admin) {
+      throw new ForbiddenException('Bạn không có quyền cập nhật bài viết này!');
+    }
+
+    // Xử lý ảnh mới (nếu có)
+    let imagePaths = post.images; // Giữ lại ảnh cũ nếu không có ảnh mới
+    if (images && images.length > 0) {
+      console.log('checking image');
+
+      imagePaths = await this.uploadImages(images); // Gọi hàm uploadImages để lấy đường dẫn ảnh mới
+    }
+
+    // Cập nhật thông tin bài viết
+    post.content = updatePostData.content || post.content; // Nếu không có content mới thì giữ nguyên
+    post.tag = updatePostData.tag || post.tag; // Nếu không có tag mới thì giữ nguyên
+    post.images = imagePaths; // Cập nhật ảnh mới (hoặc giữ ảnh cũ nếu không có ảnh mới)
+
+    // Lưu lại bài viết đã cập nhật
     return this.postsRepository.save(post);
   }
 }

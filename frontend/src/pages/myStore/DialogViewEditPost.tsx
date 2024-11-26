@@ -7,11 +7,20 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Upload, X } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import axiosInstance from "@/axios/axiosConfig";
 
 interface Post {
     id: number;
     content: string;
     images: string[];
+    tag: string; // Add tag field
 }
 
 interface DialogViewEditPostProps {
@@ -30,39 +39,82 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
     const [content, setContent] = useState(post.content);
     const [images, setImages] = useState(post.images);
     const [error, setError] = useState<string>("");
+    const [tags, setTags] = useState<string[]>([]);
+    const [selectedTag, setSelectedTag] = useState<string>(post.tag);
 
     const hostApi = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         setContent(post.content);
         setImages(post.images);
+        setSelectedTag(post.tag);
     }, [post]);
+
+    useEffect(() => {
+        const fetchTags = async () => {
+            try {
+                const response = await axiosInstance.get("/posts/tags");
+                setTags(response.data);
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+            }
+        };
+        fetchTags();
+    }, []);
 
     const handleImageChange = (newImages: FileList) => {
         if (newImages) {
             const fileArray = Array.from(newImages);
 
-            // Kiểm tra nếu tổng số ảnh hiện tại và ảnh mới vượt quá giới hạn 10
             if (images.length + fileArray.length > 10) {
                 setError("Chỉ được tải lên tối đa 10 ảnh.");
                 return;
             }
 
-            // Sử dụng URL.createObjectURL để tạo URL xem trước
             const imageUrls = fileArray.map((file) =>
                 URL.createObjectURL(file)
             );
             setImages((prev) => [...prev, ...imageUrls]);
-            setError(""); // Xóa thông báo lỗi nếu có
+            setError(""); // Clear error message
         }
     };
 
-    const handleSave = () => {
-        if (!content.trim() || images.length === 0) {
-            setError("Vui lòng nhập nội dung và ít nhất một hình ảnh.");
+    const imageToFile = async (
+        blobUrl: string,
+        fileName: string
+    ): Promise<File> => {
+        const response = await fetch(blobUrl);
+        const blob = await response.blob();
+        const file = new File([blob], fileName, { type: blob.type });
+        return file;
+    };
+
+    const handleSave = async () => {
+        if (!content.trim() || images.length === 0 || !selectedTag) {
+            setError(
+                "Vui lòng nhập nội dung, ít nhất một hình ảnh và chọn tag."
+            );
             return;
         }
-        onSave({ ...post, content, images });
+
+        const formData = new FormData();
+        formData.append("content", content);
+        formData.append("tag", selectedTag);
+
+        // Append images to formData
+        for (let i = 0; i < images.length; i++) {
+            const image = images[i];
+            if (image.startsWith("blob:")) {
+                const fileName = `image_${i}.jpg`; // Set an appropriate file name
+                const file = await imageToFile(image, fileName); // Convert blob URL to File
+                formData.append("images", file);
+            } else {
+                // If it's not a blob URL (i.e., it's a server path), you can append it as-is
+                formData.append("images", image);
+            }
+        }
+
+        onSave({ ...post, content, images, tag: selectedTag });
         onClose();
     };
 
@@ -70,13 +122,17 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
         const updatedImages = [...images];
         const removedImage = updatedImages.splice(index, 1);
 
-        // Giải phóng bộ nhớ của URL khi xóa ảnh
         if (removedImage[0] && !removedImage[0].startsWith("http")) {
             URL.revokeObjectURL(removedImage[0]);
         }
 
         setImages(updatedImages);
     };
+
+    const handleTagChange = (value: string) => {
+        setSelectedTag(value);
+    };
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="p-6 max-w-md w-full max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-lg">
@@ -155,6 +211,24 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                             </label>
                         </div>
                     )}
+                </div>
+
+                <div className="mb-6">
+                    <label className="block text-sm font-medium mb-2 text-gray-700">
+                        Chọn tag
+                    </label>
+                    <Select onValueChange={handleTagChange} value={selectedTag}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn một tag" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {tags.map((tag) => (
+                                <SelectItem key={tag} value={tag}>
+                                    {tag}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 {error && <p className="text-red-500 text-sm mt-2">{error}</p>}

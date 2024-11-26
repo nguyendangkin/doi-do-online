@@ -3,6 +3,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   Put,
   UploadedFile,
@@ -77,7 +79,7 @@ export class PostsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Put()
+  @Put(':id')
   @Roles(Role.User, Role.Admin)
   @UseInterceptors(
     FilesInterceptor('images', 10, {
@@ -101,11 +103,14 @@ export class PostsController {
   )
   async updatePost(
     @User() user: { email: string },
+    @Param('id', ParseIntPipe) idPost: number,
     @Body() updatePostData: UpdatePostDto,
     @UploadedFiles() images: Array<Express.Multer.File>, // Chắc chắn rằng bạn sử dụng @UploadedFiles() để nhận nhiều file
   ) {
-    console.log(updatePostData); // Kiểm tra lại log của content
-    console.log(images); // Log danh sách file
-    return this.postsService.updatePost(user, updatePostData, images);
+    console.log('data', updatePostData); // Kiểm tra lại log của content
+    console.log('id post', idPost);
+    console.log('user', user);
+
+    return this.postsService.updatePost(idPost, user, updatePostData, images);
   }
 }

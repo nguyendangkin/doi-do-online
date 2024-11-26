@@ -8,6 +8,7 @@ interface Posts {
     id: number;
     content: string;
     images: string[];
+    tag: string; // Đây là t
 }
 
 export default function MyStore() {
@@ -39,6 +40,7 @@ export default function MyStore() {
     const handleSavePost = async (updatedPost: Posts) => {
         try {
             await axiosInstance.put(`/posts/${updatedPost.id}`, updatedPost);
+
             setDialogOpen(false); // Close the dialog after saving
             fetchPosts(); // Refresh the post list
         } catch (error) {
