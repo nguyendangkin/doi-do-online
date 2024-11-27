@@ -71,37 +71,44 @@ export class PostsService {
 
   async updatePost(
     idPost: number,
-    user,
+    user: { id: number; role: string },
     updatePostData: UpdatePostDto,
-    images,
+    newImages: Array<Express.Multer.File>,
+    existingImages: string[],
   ) {
     // Tìm bài viết theo id
     const post = await this.postsRepository.findOne({
-      where: { id: idPost }, // Tìm kiếm bài viết theo id\
-      relations: ['user'], // Đảm bảo rằng bạn lấy thông tin người dùng liên quan
+      where: { id: idPost },
+      relations: ['user'],
     });
 
     if (!post) {
       throw new NotFoundException('Bài viết không tồn tại!');
     }
 
-    // Kiểm tra xem người dùng có quyền cập nhật bài viết này không
+    // Kiểm tra quyền
     if (post.user.id !== user.id && user.role !== Role.Admin) {
       throw new ForbiddenException('Bạn không có quyền cập nhật bài viết này!');
     }
 
-    // Xử lý ảnh mới (nếu có)
-    let imagePaths = post.images; // Giữ lại ảnh cũ nếu không có ảnh mới
-    if (images && images.length > 0) {
-      console.log('checking image');
+    // Xử lý ảnh
+    let finalImagePaths: string[] = [];
 
-      imagePaths = await this.uploadImages(images); // Gọi hàm uploadImages để lấy đường dẫn ảnh mới
+    // Thêm các ảnh hiện có vào danh sách cuối cùng
+    if (existingImages && existingImages.length > 0) {
+      finalImagePaths = [...existingImages];
+    }
+
+    // Upload và thêm các ảnh mới (nếu có)
+    if (newImages && newImages.length > 0) {
+      const newImagePaths = await this.uploadImages(newImages);
+      finalImagePaths = [...finalImagePaths, ...newImagePaths];
     }
 
     // Cập nhật thông tin bài viết
-    post.content = updatePostData.content || post.content; // Nếu không có content mới thì giữ nguyên
-    post.tag = updatePostData.tag || post.tag; // Nếu không có tag mới thì giữ nguyên
-    post.images = imagePaths; // Cập nhật ảnh mới (hoặc giữ ảnh cũ nếu không có ảnh mới)
+    post.content = updatePostData.content || post.content;
+    post.tag = updatePostData.tag || post.tag;
+    post.images = finalImagePaths;
 
     // Lưu lại bài viết đã cập nhật
     return this.postsRepository.save(post);

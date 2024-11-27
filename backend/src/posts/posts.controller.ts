@@ -102,17 +102,26 @@ export class PostsController {
     }),
   )
   async updatePost(
-    @User() user: { email: string },
+    @User() user,
     @Param('id', ParseIntPipe) idPost: number,
     @Body() updatePostData: UpdatePostDto,
     @UploadedFiles() images: Array<Express.Multer.File>, // Chắc chắn rằng bạn sử dụng @UploadedFiles() để nhận nhiều file
   ) {
-    console.log('data', updatePostData); // Kiểm tra lại log của content
-    console.log('image', images);
+    let existingImages: string[] = [];
+    if (updatePostData.existingImages) {
+      try {
+        existingImages = JSON.parse(updatePostData.existingImages);
+      } catch (error) {
+        throw new BadRequestException('Invalid existingImages format');
+      }
+    }
 
-    console.log('id post', idPost);
-    console.log('user', user);
-
-    return this.postsService.updatePost(idPost, user, updatePostData, images);
+    return this.postsService.updatePost(
+      idPost,
+      user,
+      updatePostData,
+      images,
+      existingImages,
+    );
   }
 }
