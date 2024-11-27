@@ -30,7 +30,11 @@ interface DialogViewEditPostProps {
     onSuccess: () => void;
 }
 
-type ImageItem = string | File;
+interface ImageItem {
+    url: string;
+    file?: File;
+    isNew: boolean;
+}
 
 const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
     post,
@@ -39,7 +43,7 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
     onSuccess,
 }) => {
     const [content, setContent] = useState(post.content);
-    const [images, setImages] = useState<ImageItem[]>(post.images);
+    const [images, setImages] = useState<ImageItem[]>([]);
     const [error, setError] = useState<string>("");
     const [tags, setTags] = useState<string[]>([]);
     const [selectedTag, setSelectedTag] = useState<string>(post.tag);
@@ -48,8 +52,13 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
     const hostApi = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
+        // Convert existing image URLs to ImageItem format
+        const initialImages: ImageItem[] = post.images.map((imageUrl) => ({
+            url: imageUrl,
+            isNew: false,
+        }));
         setContent(post.content);
-        setImages(post.images);
+        setImages(initialImages);
         setSelectedTag(post.tag);
     }, [post]);
 
@@ -74,7 +83,13 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                 return;
             }
 
-            setImages((prev) => [...prev, ...(fileArray as File[])]);
+            const newImageItems: ImageItem[] = fileArray.map((file) => ({
+                url: URL.createObjectURL(file),
+                file: file,
+                isNew: true,
+            }));
+
+            setImages((prev) => [...prev, ...newImageItems]);
             setError("");
         }
     };
@@ -90,28 +105,30 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
 
             setIsLoading(true);
 
-            // Create FormData for the API request
             const formData = new FormData();
-
-            // Add existing images that are Files
-            images.forEach((image) => {
-                if (image instanceof File) {
-                    formData.append("images", image);
-                }
-            });
-
-            // Add the content and tag
             formData.append("content", content);
             formData.append("tag", selectedTag);
 
-            // Send the update request
+            // Add only new images to formData
+            const newImages = images.filter((img) => img.isNew);
+            newImages.forEach((img) => {
+                if (img.file) {
+                    formData.append("images", img.file);
+                }
+            });
+
+            // Add existing image paths
+            const existingImages = images
+                .filter((img) => !img.isNew)
+                .map((img) => img.url);
+            formData.append("existingImages", JSON.stringify(existingImages));
+
             await axiosInstance.put(`/posts/${post.id}`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
             });
 
-            // Call onSuccess to refresh the posts list
             onSuccess();
             onClose();
         } catch (error) {
@@ -127,9 +144,8 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
             const updatedImages = [...prev];
             const removedImage = updatedImages[index];
 
-            // Revoke object URL if it's a File
-            if (removedImage instanceof File) {
-                URL.revokeObjectURL(URL.createObjectURL(removedImage));
+            if (removedImage.isNew && removedImage.file) {
+                URL.revokeObjectURL(removedImage.url);
             }
 
             updatedImages.splice(index, 1);
@@ -139,13 +155,6 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
 
     const handleTagChange = (value: string) => {
         setSelectedTag(value);
-    };
-
-    const getImageUrl = (image: ImageItem): string => {
-        if (image instanceof File) {
-            return URL.createObjectURL(image);
-        }
-        return image.startsWith("http") ? image : `${hostApi}${image}`;
     };
 
     return (
@@ -179,7 +188,11 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                         {images.map((image, index) => (
                             <div key={index} className="relative group">
                                 <img
-                                    src={getImageUrl(image)}
+                                    src={
+                                        image.url.startsWith("http")
+                                            ? image.url
+                                            : `${hostApi}${image.url}`
+                                    }
                                     alt={`Hình ảnh ${index + 1}`}
                                     className="w-full h-32 object-cover rounded-lg shadow"
                                 />

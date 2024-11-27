@@ -108,6 +108,8 @@ export class PostsController {
     @UploadedFiles() images: Array<Express.Multer.File>, // Chắc chắn rằng bạn sử dụng @UploadedFiles() để nhận nhiều file
   ) {
     console.log('data', updatePostData); // Kiểm tra lại log của content
+    console.log('image', images);
+
     console.log('id post', idPost);
     console.log('user', user);
 
