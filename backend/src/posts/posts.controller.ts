@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
@@ -123,5 +124,12 @@ export class PostsController {
       images,
       existingImages,
     );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Delete(':id')
+  @Roles(Role.User, Role.Admin)
+  async deletePost(@User() user, @Param('id', ParseIntPipe) idPost: number) {
+    return this.postsService.deletePost(idPost, user);
   }
 }

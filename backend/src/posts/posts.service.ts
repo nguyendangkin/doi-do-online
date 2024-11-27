@@ -1,6 +1,7 @@
 import {
   ForbiddenException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -112,5 +113,58 @@ export class PostsService {
 
     // Lưu lại bài viết đã cập nhật
     return this.postsRepository.save(post);
+  }
+
+  async deletePost(idPost: number, user: { id: number; role: string }) {
+    // Tìm bài viết theo id
+    const post = await this.postsRepository.findOne({
+      where: { id: idPost },
+      relations: ['user'],
+    });
+
+    if (!post) {
+      throw new NotFoundException('Bài viết không tồn tại!');
+    }
+
+    // Kiểm tra quyền - chỉ cho phép người tạo bài viết hoặc admin xóa
+    if (post.user.id !== user.id && user.role !== Role.Admin) {
+      throw new ForbiddenException('Bạn không có quyền xóa bài viết này!');
+    }
+
+    try {
+      // Xóa các file ảnh liên quan
+      if (post.images && post.images.length > 0) {
+        // Xóa từng file ảnh
+        for (const imagePath of post.images) {
+          try {
+            // Lấy đường dẫn đầy đủ của file
+            const fullPath = path.join(
+              process.cwd(),
+              'uploads',
+              path.basename(imagePath),
+            );
+
+            // Kiểm tra file có tồn tại không
+            if (fs.existsSync(fullPath)) {
+              // Xóa file
+              await fs.promises.unlink(fullPath);
+            }
+          } catch (error) {
+            // Log lỗi nhưng không dừng quá trình xóa bài viết
+            console.error(`Error deleting image ${imagePath}:`, error);
+          }
+        }
+      }
+
+      // Xóa bài viết từ database
+      await this.postsRepository.remove(post);
+
+      return {
+        message: 'Xóa bài viết thành công',
+        success: true,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Có lỗi xảy ra khi xóa bài viết');
+    }
   }
 }
