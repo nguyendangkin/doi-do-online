@@ -157,6 +157,17 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
         setSelectedTag(value);
     };
 
+    // Thêm hàm mới để xử lý URL ảnh
+    const getImageUrl = (image: ImageItem): string => {
+        if (image.isNew) {
+            return image.url; // URL.createObjectURL đã được tạo khi upload
+        }
+        // Ảnh từ server
+        return image.url.startsWith("http")
+            ? image.url
+            : `${hostApi}${image.url}`;
+    };
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent className="p-6 max-w-md w-full max-h-[80vh] overflow-y-auto bg-white shadow-lg rounded-lg">
@@ -188,11 +199,7 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                         {images.map((image, index) => (
                             <div key={index} className="relative group">
                                 <img
-                                    src={
-                                        image.url.startsWith("http")
-                                            ? image.url
-                                            : `${hostApi}${image.url}`
-                                    }
+                                    src={getImageUrl(image)}
                                     alt={`Hình ảnh ${index + 1}`}
                                     className="w-full h-32 object-cover rounded-lg shadow"
                                 />
