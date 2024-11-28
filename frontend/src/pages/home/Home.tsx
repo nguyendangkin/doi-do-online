@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
     Pagination,
     PaginationContent,
@@ -17,6 +18,7 @@ interface Post {
     user: {
         email: string;
     };
+    tag: string;
     createdAt: string;
 }
 
@@ -30,16 +32,20 @@ interface PaginatedResponse {
 
 export default function Home() {
     const [posts, setPosts] = useState<Post[]>([]);
+    const [tags, setTags] = useState<string[]>([]);
+    const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
     const hostApi = import.meta.env.VITE_API_URL;
-    const POSTS_PER_PAGE = 8; // Showing 8 posts per page since we have a 4-column grid
+    const POSTS_PER_PAGE = 8;
 
-    const fetchPosts = async (page: number = 1) => {
+    const fetchPosts = async (page: number = 1, tag: string | null = null) => {
         try {
-            const response = await axiosInstance.get<PaginatedResponse>(
-                `/posts/all?page=${page}&limit=${POSTS_PER_PAGE}`
-            );
+            let url = `/posts/all?page=${page}&limit=${POSTS_PER_PAGE}`;
+            if (tag) {
+                url += `&tag=${encodeURIComponent(tag)}`;
+            }
+            const response = await axiosInstance.get<PaginatedResponse>(url);
             setPosts(response.data.items);
             setTotalPages(response.data.totalPages);
             setCurrentPage(page);
@@ -49,8 +55,30 @@ export default function Home() {
     };
 
     useEffect(() => {
-        fetchPosts(currentPage);
-    }, [currentPage]);
+        const fetchTags = async () => {
+            try {
+                const response = await axiosInstance.get("/posts/tags");
+                setTags(response.data);
+            } catch (error) {
+                console.error("Error fetching tags:", error);
+            }
+        };
+        fetchTags();
+    }, []);
+
+    useEffect(() => {
+        fetchPosts(currentPage, selectedTag);
+    }, [currentPage, selectedTag]);
+
+    const handleTagClick = (tag: string) => {
+        if (selectedTag === tag) {
+            setSelectedTag(null);
+            setCurrentPage(1);
+        } else {
+            setSelectedTag(tag);
+            setCurrentPage(1);
+        }
+    };
 
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
@@ -66,6 +94,19 @@ export default function Home() {
 
     return (
         <>
+            <div className="mb-4 flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                    <Badge
+                        key={tag}
+                        variant={selectedTag === tag ? "default" : "outline"}
+                        className="cursor-pointer hover:bg-primary/90"
+                        onClick={() => handleTagClick(tag)}
+                    >
+                        {tag}
+                    </Badge>
+                ))}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {posts.map((post) => (
                     <Card
@@ -93,6 +134,9 @@ export default function Home() {
                                         day: "numeric",
                                     })}
                                 </p>
+                                <Badge variant="outline" className="mt-2">
+                                    {post.tag}
+                                </Badge>
                             </div>
                         </CardContent>
                     </Card>

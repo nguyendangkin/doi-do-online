@@ -85,17 +85,25 @@ export class PostsService {
     };
   }
 
-  async getAllPosts(page: number = 1, limit: number = 5) {
+  async getAllPosts(page: number = 1, limit: number = 5, tag?: string) {
     const skip = (page - 1) * limit;
 
-    const [items, total] = await this.postsRepository.findAndCount({
-      relations: ['user'], // Include user information if needed
-      order: {
-        createdAt: 'DESC', // Sort by newest first
-      },
-      take: limit,
-      skip: skip,
-    });
+    // Tạo query builder để có thể thêm điều kiện lọc
+    const queryBuilder = this.postsRepository
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .orderBy('post.createdAt', 'DESC');
+
+    // Thêm điều kiện lọc theo tag nếu có
+    if (tag) {
+      queryBuilder.where('post.tag = :tag', { tag });
+    }
+
+    // Thực hiện query với pagination
+    const [items, total] = await queryBuilder
+      .take(limit)
+      .skip(skip)
+      .getManyAndCount();
 
     const totalPages = Math.ceil(total / limit);
 
@@ -107,7 +115,6 @@ export class PostsService {
       totalPages,
     };
   }
-
   async updatePost(
     idPost: number,
     user: { id: number; role: string },
