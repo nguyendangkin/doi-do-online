@@ -77,6 +77,15 @@ export class PostsController {
     return this.postsService.getPosts(user, page, limit);
   }
 
+  @Get('all') // Change route to /all to avoid conflict with getPosts
+  @Roles(Role.User, Role.Admin)
+  async getAllPosts(
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+  ) {
+    return this.postsService.getAllPosts(page, limit);
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('tags')
   @Roles(Role.User, Role.Admin)

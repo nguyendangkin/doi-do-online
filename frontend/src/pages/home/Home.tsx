@@ -1,284 +1,147 @@
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
     PaginationLink,
     PaginationNext,
     PaginationPrevious,
 } from "@/components/ui/pagination";
+import axiosInstance from "@/axios/axiosConfig";
 
-import oneImage from "@/assets/images/products/1.jpg";
-import oneImage2 from "@/assets/images/products/2.jpg";
-import oneImage3 from "@/assets/images/products/3.jpg";
-import oneImage4 from "@/assets/images/products/4.jpg";
-import oneImage5 from "@/assets/images/products/5.jpg";
-import oneImage6 from "@/assets/images/products/6.jpg";
-import oneImage7 from "@/assets/images/products/7.jpg";
-import oneImage8 from "@/assets/images/products/8.jpg";
-import oneImage9 from "@/assets/images/products/9.jpg";
-import oneImage10 from "@/assets/images/products/10.jpg";
+interface Post {
+    id: number;
+    content: string;
+    images: string[];
+    user: {
+        email: string;
+    };
+    createdAt: string;
+}
+
+interface PaginatedResponse {
+    items: Post[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+}
 
 export default function Home() {
+    const [posts, setPosts] = useState<Post[]>([]);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [totalPages, setTotalPages] = useState<number>(1);
+    const hostApi = import.meta.env.VITE_API_URL;
+    const POSTS_PER_PAGE = 8; // Showing 8 posts per page since we have a 4-column grid
+
+    const fetchPosts = async (page: number = 1) => {
+        try {
+            const response = await axiosInstance.get<PaginatedResponse>(
+                `/posts/all?page=${page}&limit=${POSTS_PER_PAGE}`
+            );
+            setPosts(response.data.items);
+            setTotalPages(response.data.totalPages);
+            setCurrentPage(page);
+        } catch (error) {
+            console.error("Error fetching posts:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPosts(currentPage);
+    }, [currentPage]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const getPageNumbers = () => {
+        const pages = [];
+        for (let i = 1; i <= totalPages; i++) {
+            pages.push(i);
+        }
+        return pages;
+    };
+
     return (
         <>
-            <div className="grid grid-cols-4 gap-4">
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded "
-                            src={oneImage2}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage3}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage4}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage5}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage6}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage7}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage8}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage9}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage10}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>Dàn pc core i9 2028</p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
-                <Card className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer">
-                    <CardHeader>
-                        <img
-                            className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                            src={oneImage}
-                            alt="ảnh 1"
-                        />
-                    </CardHeader>
-                    <CardContent>
-                        <p>
-                            xin chào các bạn đã đến với channel của mình mình là
-                            cô gái súng đạn lòng nhiệt huyết này không thể cạn
-                            và sự điên rồ là vô giới hạn mình là phần tử chống
-                            đối quậy khắp nơi ở pitover xin chào các bạn nhé nè
-                            nha oke
-                        </p>
-                    </CardContent>
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {posts.map((post) => (
+                    <Card
+                        key={post.id}
+                        className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer"
+                    >
+                        <CardHeader>
+                            <img
+                                className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
+                                src={hostApi + post.images[0]}
+                                alt={`Post ${post.id}`}
+                            />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="line-clamp-3">{post.content}</p>
+                            <div className="mt-2 text-sm text-gray-500">
+                                <p>Đăng bởi: {post.user.email}</p>
+                                <p>
+                                    Ngày đăng:{" "}
+                                    {new Date(
+                                        post.createdAt
+                                    ).toLocaleDateString("vi-VN", {
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                    })}
+                                </p>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
-            <Pagination className="my-5">
+
+            <Pagination className="my-5 justify-center">
                 <PaginationContent>
                     <PaginationItem>
-                        <PaginationPrevious href="#" />
+                        <PaginationPrevious
+                            onClick={() =>
+                                currentPage > 1 &&
+                                handlePageChange(currentPage - 1)
+                            }
+                            className={
+                                currentPage <= 1
+                                    ? "pointer-events-none opacity-50"
+                                    : "cursor-pointer"
+                            }
+                        />
                     </PaginationItem>
+
+                    {getPageNumbers().map((page) => (
+                        <PaginationItem key={page}>
+                            <PaginationLink
+                                onClick={() => handlePageChange(page)}
+                                className={
+                                    currentPage === page
+                                        ? "bg-primary text-primary-foreground"
+                                        : "cursor-pointer"
+                                }
+                            >
+                                {page}
+                            </PaginationLink>
+                        </PaginationItem>
+                    ))}
+
                     <PaginationItem>
-                        <PaginationLink href="#">1</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationEllipsis />
-                    </PaginationItem>
-                    <PaginationItem>
-                        <PaginationNext href="#" />
+                        <PaginationNext
+                            onClick={() =>
+                                currentPage < totalPages &&
+                                handlePageChange(currentPage + 1)
+                            }
+                            className={
+                                currentPage >= totalPages
+                                    ? "pointer-events-none opacity-50"
+                                    : "cursor-pointer"
+                            }
+                        />
                     </PaginationItem>
                 </PaginationContent>
             </Pagination>

@@ -85,6 +85,29 @@ export class PostsService {
     };
   }
 
+  async getAllPosts(page: number = 1, limit: number = 5) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.postsRepository.findAndCount({
+      relations: ['user'], // Include user information if needed
+      order: {
+        createdAt: 'DESC', // Sort by newest first
+      },
+      take: limit,
+      skip: skip,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
   async updatePost(
     idPost: number,
     user: { id: number; role: string },

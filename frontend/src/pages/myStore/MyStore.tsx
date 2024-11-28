@@ -6,7 +6,6 @@ import DialogViewEditPost from "@/pages/myStore/DialogViewEditPost";
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
     PaginationLink,
     PaginationNext,
