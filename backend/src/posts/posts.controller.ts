@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UploadedFile,
   UploadedFiles,
   UseGuards,
@@ -68,8 +69,12 @@ export class PostsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get()
   @Roles(Role.User, Role.Admin)
-  async getPosts(@User() user: { email: string }) {
-    return this.postsService.getPosts(user);
+  async getPosts(
+    @User() user: { email: string },
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 5,
+  ) {
+    return this.postsService.getPosts(user, page, limit);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

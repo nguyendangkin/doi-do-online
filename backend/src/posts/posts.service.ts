@@ -58,17 +58,31 @@ export class PostsService {
     return this.postsRepository.save(post);
   }
 
-  async getPosts(user) {
+  async getPosts(user, page: number = 1, limit: number = 5) {
     const foundUser = await this.usersService.findOneUserByEmail(user.email);
 
     if (!foundUser) {
       throw new Error('Không thấy user');
     }
 
-    return this.postsRepository.find({
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await this.postsRepository.findAndCount({
       where: { user: { id: foundUser.id } },
       order: { createdAt: 'DESC' },
+      take: limit,
+      skip: skip,
     });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async updatePost(
