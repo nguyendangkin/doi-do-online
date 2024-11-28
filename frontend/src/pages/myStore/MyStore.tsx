@@ -3,6 +3,15 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import DiaLogUploadContentModal from "@/pages/myStore/DiaLogUploadContentModal";
 import axiosInstance from "@/axios/axiosConfig";
 import DialogViewEditPost from "@/pages/myStore/DialogViewEditPost";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationEllipsis,
+    PaginationItem,
+    PaginationLink,
+    PaginationNext,
+    PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Post {
     id: number;
@@ -69,6 +78,22 @@ export default function MyStore() {
                     onSuccess={fetchPosts}
                 />
             )}
+            <Pagination>
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationLink href="#">1</PaginationLink>
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationEllipsis />
+                    </PaginationItem>
+                    <PaginationItem>
+                        <PaginationNext href="#" />
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
         </div>
     );
 }

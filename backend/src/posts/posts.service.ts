@@ -67,6 +67,7 @@ export class PostsService {
 
     return this.postsRepository.find({
       where: { user: { id: foundUser.id } },
+      order: { createdAt: 'DESC' },
     });
   }
 

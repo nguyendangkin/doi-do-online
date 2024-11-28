@@ -1,5 +1,11 @@
 import { Users } from 'src/users/entity/users.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity()
 export class Posts {
@@ -17,4 +23,7 @@ export class Posts {
 
   @ManyToOne(() => Users, (user) => user.post, { onDelete: 'CASCADE' })
   user: Users;
+
+  @CreateDateColumn()
+  createdAt: Date; // Thời gian tạo bài viết
 }
