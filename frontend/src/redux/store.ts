@@ -3,6 +3,7 @@ import storage from "redux-persist/lib/storage";
 import { persistStore, persistReducer } from "redux-persist";
 import authSlice from "@/redux/authSlice";
 import userSlice from "@/redux/userSlice";
+import postsSlice from "@/redux/postsSlice";
 
 // Cấu hình persist cho authSlice và userSlice
 const persistConfig = {
@@ -15,6 +16,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
     auth: authSlice,
     user: userSlice,
+    post: postsSlice,
 });
 
 // Tạo persisted reducer cho toàn bộ ứng dụng

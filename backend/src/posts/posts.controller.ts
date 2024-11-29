@@ -81,9 +81,10 @@ export class PostsController {
   async getAllPosts(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,
-    @Query('tag') tag?: string, // Thêm query parameter cho tag
+    @Query('tag') tag?: string,
+    @Query('search') search?: string, // Thêm query parameter cho search
   ) {
-    return this.postsService.getAllPosts(page, limit, tag);
+    return this.postsService.getAllPosts(page, limit, tag, search);
   }
 
   @Get('tags')

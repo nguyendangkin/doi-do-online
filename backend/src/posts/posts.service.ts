@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreatePostDto } from 'src/posts/dto/postDto.dto';
 import { Posts } from 'src/posts/entity/post.entity';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -85,10 +85,15 @@ export class PostsService {
     };
   }
 
-  async getAllPosts(page: number = 1, limit: number = 5, tag?: string) {
+  async getAllPosts(
+    page: number = 1,
+    limit: number = 5,
+    tag?: string,
+    search?: string,
+  ) {
     const skip = (page - 1) * limit;
 
-    // Tạo query builder để có thể thêm điều kiện lọc
+    // Tạo query builder
     const queryBuilder = this.postsRepository
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
@@ -96,7 +101,25 @@ export class PostsService {
 
     // Thêm điều kiện lọc theo tag nếu có
     if (tag) {
-      queryBuilder.where('post.tag = :tag', { tag });
+      queryBuilder.andWhere('post.tag = :tag', { tag });
+    }
+
+    // Thêm điều kiện tìm kiếm trong nội dung nếu có
+    if (search?.trim()) {
+      const searchTerms = search.trim().split(/\s+/); // Tách các từ khóa tìm kiếm
+
+      // Tạo điều kiện tìm kiếm cho mỗi từ
+      searchTerms.forEach((term, index) => {
+        queryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.where('LOWER(post.content) LIKE LOWER(:search' + index + ')', {
+              ['search' + index]: `%${term}%`,
+            }).orWhere('LOWER(post.tag) LIKE LOWER(:tagSearch' + index + ')', {
+              ['tagSearch' + index]: `%${term}%`,
+            });
+          }),
+        );
+      });
     }
 
     // Thực hiện query với pagination

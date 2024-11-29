@@ -10,6 +10,9 @@ import {
     PaginationPrevious,
 } from "@/components/ui/pagination";
 import axiosInstance from "@/axios/axiosConfig";
+import { useDispatch, useSelector } from "react-redux";
+import { setPosts } from "@/redux/postsSlice";
+import { useSearchParams } from "react-router-dom";
 
 interface Post {
     id: number;
@@ -31,7 +34,10 @@ interface PaginatedResponse {
 }
 
 export default function Home() {
-    const [posts, setPosts] = useState<Post[]>([]);
+    const posts = useSelector((state: any) => state?.post?.posts) as Post[];
+    const [searchParams] = useSearchParams();
+    const dispatch = useDispatch();
+
     const [tags, setTags] = useState<string[]>([]);
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -45,8 +51,12 @@ export default function Home() {
             if (tag) {
                 url += `&tag=${encodeURIComponent(tag)}`;
             }
+            const searchTerm = searchParams.get("q");
+            if (searchTerm) {
+                url += `&search=${encodeURIComponent(searchTerm)}`;
+            }
             const response = await axiosInstance.get<PaginatedResponse>(url);
-            setPosts(response.data.items);
+            dispatch(setPosts(response.data.items));
             setTotalPages(response.data.totalPages);
             setCurrentPage(page);
         } catch (error) {
@@ -68,7 +78,7 @@ export default function Home() {
 
     useEffect(() => {
         fetchPosts(currentPage, selectedTag);
-    }, [currentPage, selectedTag]);
+    }, [currentPage, selectedTag, searchParams]); // Added searchParams dependency
 
     const handleTagClick = (tag: string) => {
         if (selectedTag === tag) {
@@ -108,39 +118,40 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {posts.map((post) => (
-                    <Card
-                        key={post.id}
-                        className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer"
-                    >
-                        <CardHeader>
-                            <img
-                                className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
-                                src={hostApi + post.images[0]}
-                                alt={`Post ${post.id}`}
-                            />
-                        </CardHeader>
-                        <CardContent>
-                            <p className="line-clamp-3">{post.content}</p>
-                            <div className="mt-2 text-sm text-gray-500">
-                                <p>Đăng bởi: {post.user.email}</p>
-                                <p>
-                                    Ngày đăng:{" "}
-                                    {new Date(
-                                        post.createdAt
-                                    ).toLocaleDateString("vi-VN", {
-                                        year: "numeric",
-                                        month: "long",
-                                        day: "numeric",
-                                    })}
-                                </p>
-                                <Badge variant="outline" className="mt-2">
-                                    {post.tag}
-                                </Badge>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
+                {posts &&
+                    posts.map((post) => (
+                        <Card
+                            key={post.id}
+                            className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer"
+                        >
+                            <CardHeader>
+                                <img
+                                    className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
+                                    src={hostApi + post.images[0]}
+                                    alt={`Post ${post.id}`}
+                                />
+                            </CardHeader>
+                            <CardContent>
+                                <p className="line-clamp-3">{post.content}</p>
+                                <div className="mt-2 text-sm text-gray-500">
+                                    <p>Đăng bởi: {post.user.email}</p>
+                                    <p>
+                                        Ngày đăng:{" "}
+                                        {new Date(
+                                            post.createdAt
+                                        ).toLocaleDateString("vi-VN", {
+                                            year: "numeric",
+                                            month: "long",
+                                            day: "numeric",
+                                        })}
+                                    </p>
+                                    <Badge variant="outline" className="mt-2">
+                                        {post.tag}
+                                    </Badge>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
             </div>
 
             <Pagination className="my-5 justify-center">

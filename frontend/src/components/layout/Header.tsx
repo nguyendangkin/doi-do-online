@@ -1,12 +1,13 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FaBoxes, FaSearch } from "react-icons/fa";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDispatch, useSelector } from "react-redux";
 import axiosInstance from "@/axios/axiosConfig";
 import { logout } from "@/redux/authSlice";
 import { persistor } from "@/redux/store";
+import { useState, useEffect } from "react";
 
 import {
     DropdownMenu,
@@ -16,15 +17,28 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect } from "react";
 import { setUserInfo } from "@/redux/userSlice";
+import { useDebounce } from "@/customsHooks/useDebounce";
 
 export default function Header() {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchTerm, setSearchTerm] = useState(searchParams.get("q") || "");
+    const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
     const accessToken = useSelector(
         (state: any) => state?.auth?.user?.access_token
     );
+
+    useEffect(() => {
+        if (debouncedSearchTerm) {
+            setSearchParams({ q: debouncedSearchTerm });
+        } else {
+            searchParams.delete("q");
+            setSearchParams(searchParams);
+        }
+    }, [debouncedSearchTerm]);
 
     useEffect(() => {
         if (accessToken) {
@@ -36,8 +50,6 @@ export default function Header() {
                     console.error("Error fetching user data:", error);
                 }
             };
-            console.log(1);
-
             fetchUserData();
         }
     }, []);
@@ -57,6 +69,13 @@ export default function Header() {
         }
     };
 
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchTerm.trim()) {
+            setSearchParams({ q: searchTerm });
+        }
+    };
+
     return (
         <header className="">
             <div className="flex p-1 items-center">
@@ -69,12 +88,16 @@ export default function Header() {
                         <FaBoxes />
                     </Link>
                 </Button>
-                <div className="flex w-[100%] gap-1">
-                    <Input />
-                    <Button variant="outline">
+                <form onSubmit={handleSearch} className="flex w-[100%] gap-1">
+                    <Input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        placeholder="Tìm kiếm sản phẩm..."
+                    />
+                    <Button type="submit" variant="outline">
                         <FaSearch />
                     </Button>
-                </div>
+                </form>
                 <div className="flex gap-1 ml-3">
                     {accessToken ? (
                         <DropdownMenu>
