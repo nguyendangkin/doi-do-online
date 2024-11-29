@@ -13,6 +13,7 @@ import axiosInstance from "@/axios/axiosConfig";
 import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "@/redux/postsSlice";
 import { useSearchParams } from "react-router-dom";
+import ProductDetailModal from "@/pages/home/ProductDetailModal";
 
 interface Post {
     id: number;
@@ -38,12 +39,24 @@ export default function Home() {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
 
+    const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+
     const [tags, setTags] = useState<string[]>([]);
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [totalPages, setTotalPages] = useState<number>(1);
     const hostApi = import.meta.env.VITE_API_URL;
     const POSTS_PER_PAGE = 8;
+
+    // Thêm handler để mở modal
+    const handlePostClick = (post: Post) => {
+        setSelectedPost(post);
+    };
+
+    // Thêm handler để đóng modal
+    const handleCloseModal = () => {
+        setSelectedPost(null);
+    };
 
     const fetchPosts = async (page: number = 1, tag: string | null = null) => {
         try {
@@ -123,6 +136,7 @@ export default function Home() {
                         <Card
                             key={post.id}
                             className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer"
+                            onClick={() => handlePostClick(post)}
                         >
                             <CardHeader>
                                 <img
@@ -200,6 +214,13 @@ export default function Home() {
                     </PaginationItem>
                 </PaginationContent>
             </Pagination>
+            {selectedPost && (
+                <ProductDetailModal
+                    post={selectedPost} // Đảm bảo chỉ truyền khi không null
+                    isOpen={!!selectedPost}
+                    onClose={handleCloseModal}
+                />
+            )}
         </>
     );
 }
