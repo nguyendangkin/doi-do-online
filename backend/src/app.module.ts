@@ -8,6 +8,10 @@ import { Users } from 'src/users/entity/users.entity';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PostsModule } from './posts/posts.module';
 import { Posts } from 'src/posts/entity/post.entity';
+import { ChatsModule } from './chats/chats.module';
+import { MessagesModule } from './messages/messages.module';
+import { Chat } from 'src/chats/entity/chats.entity';
+import { Message } from 'src/messages/entity/messages.entity';
 
 @Module({
   imports: [
@@ -22,7 +26,7 @@ import { Posts } from 'src/posts/entity/post.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_DATABASE'),
-        entities: [Users, Posts],
+        entities: [Users, Posts, Chat, Message],
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -31,6 +35,8 @@ import { Posts } from 'src/posts/entity/post.entity';
       isGlobal: true,
     }),
     PostsModule,
+    ChatsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

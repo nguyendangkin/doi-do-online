@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import {
     Pagination,
     PaginationContent,
@@ -14,12 +22,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "@/redux/postsSlice";
 import { useSearchParams } from "react-router-dom";
 import ProductDetailModal from "@/pages/home/ProductDetailModal";
+import MessengerChat from "@/pages/chats/Chat";
 
 interface Post {
     id: number;
     content: string;
     images: string[];
     user: {
+        id: number;
         email: string;
     };
     tag: string;
@@ -38,8 +48,14 @@ export default function Home() {
     const posts = useSelector((state: any) => state?.post?.posts) as Post[];
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
+    const currentUser = useSelector((state: any) => state.auth.user);
 
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [selectedSeller, setSelectedSeller] = useState<{
+        id: number;
+        email: string;
+    } | null>(null);
 
     const [tags, setTags] = useState<string[]>([]);
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -48,14 +64,22 @@ export default function Home() {
     const hostApi = import.meta.env.VITE_API_URL;
     const POSTS_PER_PAGE = 8;
 
-    // Thêm handler để mở modal
+    // Handler để mở modal sản phẩm
     const handlePostClick = (post: Post) => {
         setSelectedPost(post);
     };
 
-    // Thêm handler để đóng modal
+    // Handler để đóng modal sản phẩm
     const handleCloseModal = () => {
         setSelectedPost(null);
+    };
+
+    // Handler để mở chat với người bán
+    const handleChatWithSeller = (seller: { id: number; email: string }) => {
+        if (currentUser && currentUser.id !== seller.id) {
+            setSelectedSeller(seller);
+            setIsChatOpen(true);
+        }
     };
 
     const fetchPosts = async (page: number = 1, tag: string | null = null) => {
@@ -91,7 +115,7 @@ export default function Home() {
 
     useEffect(() => {
         fetchPosts(currentPage, selectedTag);
-    }, [currentPage, selectedTag, searchParams]); // Added searchParams dependency
+    }, [currentPage, selectedTag, searchParams]);
 
     const handleTagClick = (tag: string) => {
         if (selectedTag === tag) {
@@ -135,10 +159,12 @@ export default function Home() {
                     posts.map((post) => (
                         <Card
                             key={post.id}
-                            className="hover:shadow-lg transition-shadow duration-300 hover:cursor-pointer"
-                            onClick={() => handlePostClick(post)}
+                            className="hover:shadow-lg transition-shadow duration-300"
                         >
-                            <CardHeader>
+                            <CardHeader
+                                className="cursor-pointer"
+                                onClick={() => handlePostClick(post)}
+                            >
                                 <img
                                     className="w-full h-[200px] object-cover aspect-w-16 aspect-h-9 rounded"
                                     src={hostApi + post.images[0]}
@@ -148,7 +174,25 @@ export default function Home() {
                             <CardContent>
                                 <p className="line-clamp-3">{post.content}</p>
                                 <div className="mt-2 text-sm text-gray-500">
-                                    <p>Đăng bởi: {post.user.email}</p>
+                                    <div className="flex justify-between items-center">
+                                        <p>Đăng bởi: {post.user.email}</p>
+                                        {currentUser &&
+                                            currentUser.id !== post.user.id && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        handleChatWithSeller(
+                                                            post.user
+                                                        )
+                                                    }
+                                                    className="ml-2"
+                                                >
+                                                    <MessageCircle className="h-4 w-4 mr-1" />
+                                                    Chat
+                                                </Button>
+                                            )}
+                                    </div>
                                     <p>
                                         Ngày đăng:{" "}
                                         {new Date(
@@ -214,13 +258,32 @@ export default function Home() {
                     </PaginationItem>
                 </PaginationContent>
             </Pagination>
+
+            {/* Product Detail Modal */}
             {selectedPost && (
                 <ProductDetailModal
-                    post={selectedPost} // Đảm bảo chỉ truyền khi không null
+                    post={selectedPost}
                     isOpen={!!selectedPost}
                     onClose={handleCloseModal}
                 />
             )}
+
+            {/* Chat Dialog */}
+            <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
+                <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                        <DialogTitle>
+                            Chat với {selectedSeller?.email}
+                        </DialogTitle>
+                    </DialogHeader>
+                    {selectedSeller && (
+                        <MessengerChat
+                            currentUser={currentUser}
+                            sellerId={selectedSeller.id}
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

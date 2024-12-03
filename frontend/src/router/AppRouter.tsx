@@ -1,4 +1,5 @@
 import App from "@/App";
+import Chat from "@/pages/chats/Chat";
 import Home from "@/pages/home/Home";
 import Login from "@/pages/login/Login";
 import MyStore from "@/pages/myStore/MyStore";
@@ -51,6 +52,14 @@ export default function AppRouter() {
                         }
                     />
 
+                    <Route
+                        path="kenh-chat"
+                        element={
+                            <ProtectedRoute>
+                                <Chat />
+                            </ProtectedRoute>
+                        }
+                    />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </App>

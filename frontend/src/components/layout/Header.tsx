@@ -123,10 +123,9 @@ export default function Header() {
                                 <DropdownMenuItem asChild>
                                     <Link to={"/kho-cua-toi"}>Kho của tôi</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                    Đẩy hàng lên kho
+                                <DropdownMenuItem asChild>
+                                    <Link to={"/kenh-chat"}>Kênh chát</Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>Phòng chát</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
