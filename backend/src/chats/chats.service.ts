@@ -14,20 +14,29 @@ export class ChatService {
   ) {}
 
   // Tìm hoặc tạo chat với seller
-  async findOrCreateChatWithSeller(
+  async findOrCreateChatWithSellerAndPost(
     currentUserId: number,
     sellerId: number,
+    postId: number,
   ): Promise<Chat> {
-    // Tìm chat hiện có
+    // Find existing chat for this post
     let chat = await this.chatRepository.findOne({
       where: [
-        { sender: { id: currentUserId }, receiver: { id: sellerId } },
-        { sender: { id: sellerId }, receiver: { id: currentUserId } },
+        {
+          sender: { id: currentUserId },
+          receiver: { id: sellerId },
+          post: { id: postId },
+        },
+        {
+          sender: { id: sellerId },
+          receiver: { id: currentUserId },
+          post: { id: postId },
+        },
       ],
-      relations: ['sender', 'receiver', 'messages'],
+      relations: ['sender', 'receiver', 'messages', 'post'],
     });
 
-    // Nếu chưa có, tạo mới
+    // If no chat exists, create one
     if (!chat) {
       const [sender, receiver] = await Promise.all([
         this.userRepository.findOneBy({ id: currentUserId }),
@@ -41,6 +50,7 @@ export class ChatService {
       chat = this.chatRepository.create({
         sender,
         receiver,
+        post: { id: postId }, // Associate with post
         lastMessage: '',
         timestamp: new Date(),
         unread: 0,

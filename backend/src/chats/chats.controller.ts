@@ -25,14 +25,19 @@ export class ChatsController {
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Get('seller/:sellerId')
+  @Get('seller/:sellerId/post/:postId')
   @Roles(Role.User, Role.Admin)
-  getChatWithSeller(
+  getChatWithSellerAndPost(
     @Request() req,
     @Param('sellerId') sellerId: number,
+    @Param('postId') postId: number,
     @User() user,
   ) {
-    return this.chatService.findOrCreateChatWithSeller(req.user.id, sellerId);
+    return this.chatService.findOrCreateChatWithSellerAndPost(
+      req.user.id,
+      sellerId,
+      postId,
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

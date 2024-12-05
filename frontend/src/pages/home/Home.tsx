@@ -23,6 +23,7 @@ import { setPosts } from "@/redux/postsSlice";
 import { useSearchParams } from "react-router-dom";
 import ProductDetailModal from "@/pages/home/ProductDetailModal";
 import MessengerChat from "@/pages/chats/Chat";
+import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface Post {
     id: number;
@@ -48,7 +49,8 @@ export default function Home() {
     const posts = useSelector((state: any) => state?.post?.posts) as Post[];
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
-    const currentUser = useSelector((state: any) => state.auth.user);
+    const currentUser = useSelector((state: any) => state?.auth?.user);
+    const userId = useSelector((state: any) => state?.user?.user);
 
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
     const [isChatOpen, setIsChatOpen] = useState(false);
@@ -64,24 +66,38 @@ export default function Home() {
     const hostApi = import.meta.env.VITE_API_URL;
     const POSTS_PER_PAGE = 8;
 
-    // Handler để mở modal sản phẩm
+    // Hàm kiểm tra xem có nên hiển thị nút chat hay không
+    const shouldShowChatButton = (postUserId: number) => {
+        return userId?.id !== undefined && userId.id !== postUserId;
+    };
+
     const handlePostClick = (post: Post) => {
         setSelectedPost(post);
     };
 
-    // Handler để đóng modal sản phẩm
     const handleCloseModal = () => {
         setSelectedPost(null);
     };
 
-    // Handler để mở chat với người bán
-    const handleChatWithSeller = (seller: { id: number; email: string }) => {
-        if (currentUser && currentUser.id !== seller.id) {
+    const handleChatWithSeller = (
+        seller: { id: number; email: string },
+        postId: number
+    ) => {
+        if (shouldShowChatButton(seller.id)) {
             setSelectedSeller(seller);
             setIsChatOpen(true);
+
+            // Sửa URL endpoint để match với backend
+            axiosInstance
+                .get(`/chats/seller/${seller.id}/post/${postId}`) // Thêm /post/${postId}
+                .then((response) => {
+                    console.log("Chat fetched:", response.data);
+                })
+                .catch((error) => {
+                    console.error("Error fetching chat:", error);
+                });
         }
     };
-
     const fetchPosts = async (page: number = 1, tag: string | null = null) => {
         try {
             let url = `/posts/all?page=${page}&limit=${POSTS_PER_PAGE}`;
@@ -176,22 +192,22 @@ export default function Home() {
                                 <div className="mt-2 text-sm text-gray-500">
                                     <div className="flex justify-between items-center">
                                         <p>Đăng bởi: {post.user.email}</p>
-                                        {currentUser &&
-                                            currentUser.id !== post.user.id && (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        handleChatWithSeller(
-                                                            post.user
-                                                        )
-                                                    }
-                                                    className="ml-2"
-                                                >
-                                                    <MessageCircle className="h-4 w-4 mr-1" />
-                                                    Chat
-                                                </Button>
-                                            )}
+                                        {shouldShowChatButton(post.user.id) && (
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                    handleChatWithSeller(
+                                                        post.user,
+                                                        post.id
+                                                    )
+                                                }
+                                                className="ml-2"
+                                            >
+                                                <MessageCircle className="h-4 w-4 mr-1" />
+                                                Chat
+                                            </Button>
+                                        )}
                                     </div>
                                     <p>
                                         Ngày đăng:{" "}
@@ -276,10 +292,15 @@ export default function Home() {
                             Chat với {selectedSeller?.email}
                         </DialogTitle>
                     </DialogHeader>
+                    {/* Thêm DialogDescription hoặc aria-describedby */}
+                    <DialogDescription className="sr-only">
+                        Chat với người bán {selectedSeller?.email}
+                    </DialogDescription>
                     {selectedSeller && (
                         <MessengerChat
                             currentUser={currentUser}
                             sellerId={selectedSeller.id}
+                            postId={selectedPost?.id} // Thêm postId
                         />
                     )}
                 </DialogContent>

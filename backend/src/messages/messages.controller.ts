@@ -19,7 +19,7 @@ export class MessagesController {
     @Body() messageDto: CreateMessageDto,
     @User() user,
   ) {
-    const { sender, content, type } = messageDto;
-    return this.messageService.createMessage(chatId, sender, content, type);
+    const { senderId, content, type } = messageDto; // Change from sender to senderId
+    return this.messageService.createMessage(chatId, senderId, content, type);
   }
 }

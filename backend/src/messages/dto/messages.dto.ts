@@ -1,5 +1,5 @@
 export class CreateMessageDto {
-  sender: 'me' | 'other';
+  senderId: number; // Change from sender: 'me' | 'other'
   content: string;
   type: 'text' | 'image' | 'multiple-images';
 }

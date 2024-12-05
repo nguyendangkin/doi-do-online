@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Message } from 'src/messages/entity/messages.entity';
 import { Users } from 'src/users/entity/users.entity';
+import { Posts } from 'src/posts/entity/post.entity';
 
 @Entity('chats')
 export class Chat {
@@ -27,6 +28,9 @@ export class Chat {
 
   @Column({ type: 'int', default: 0 })
   unread: number;
+
+  @ManyToOne(() => Posts)
+  post: Posts;
 
   @OneToMany(() => Message, (message) => message.chat)
   messages: Message[];

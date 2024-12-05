@@ -20,19 +20,20 @@ interface Conversation {
 interface Message {
     id: number;
     content: string | string[];
-    sender: "me" | "other";
+    senderId: number; // Changed from sender: "me" | "other"
     timestamp: string;
     type: "text" | "image" | "multiple-images";
 }
-
 interface MessengerChatProps {
-    sellerId?: number; // Make it optional with ?
+    sellerId?: number;
+    postId?: number; // Thêm prop này
     currentUser: { id: number; email: string };
 }
 
 const MessengerChat: React.FC<MessengerChatProps> = ({
     sellerId,
     currentUser,
+    postId,
 }) => {
     // States
     const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -65,9 +66,10 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     useEffect(() => {
         const fetchConversations = async () => {
             try {
-                if (sellerId) {
+                if (sellerId && postId) {
+                    // Check cả postId
                     const response = await axiosInstance.get(
-                        `/chats/seller/${sellerId}`
+                        `/chats/seller/${sellerId}/post/${postId}`
                     );
                     const formattedChat = formatChatData(response.data);
                     setConversations([formattedChat]);
@@ -82,7 +84,7 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
             }
         };
         fetchConversations();
-    }, [sellerId, currentUser]);
+    }, [sellerId, postId, currentUser]); // Thêm postId vào dependencies
 
     // Fetch messages when selecting a chat
     useEffect(() => {
@@ -116,18 +118,15 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
             try {
                 const newMessages: Message[] = [];
 
-                // Handle images
                 if (previewImages.length > 0) {
                     const formData = new FormData();
-                    previewImages.forEach((image, index) => {
-                        // Convert base64 to file if needed
+                    previewImages.forEach((image) => {
                         formData.append("images", image);
                     });
 
-                    // Send images
                     const imageMessage = {
                         chatId: selectedChat.id,
-                        sender: "me",
+                        senderId: currentUser.id, // Use actual user ID
                         content: previewImages,
                         type:
                             previewImages.length === 1
@@ -143,7 +142,7 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                     newMessages.push({
                         id: Date.now(),
                         content: previewImages,
-                        sender: "me",
+                        senderId: currentUser.id, // Use actual user ID
                         timestamp: new Date().toLocaleTimeString(),
                         type:
                             previewImages.length === 1
@@ -154,11 +153,10 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                     setPreviewImages([]);
                 }
 
-                // Handle text message
                 if (newMessage.trim()) {
                     const textMessage = {
                         chatId: selectedChat.id,
-                        sender: "me",
+                        senderId: currentUser.id, // Send actual user ID
                         content: newMessage,
                         type: "text",
                     };
@@ -171,7 +169,7 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                     newMessages.push({
                         id: Date.now() + 1,
                         content: newMessage,
-                        sender: "me",
+                        senderId: currentUser.id, // Use actual user ID
                         timestamp: new Date().toLocaleTimeString(),
                         type: "text",
                     });
@@ -238,6 +236,56 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
             default:
                 return <p>{message.content as string}</p>;
         }
+    };
+
+    // Update message rendering to compare actual user IDs
+    const renderMessages = () => {
+        return messages.map((message) => (
+            <div
+                key={message.id}
+                className={`flex ${
+                    message.senderId === currentUser.id
+                        ? "justify-end"
+                        : "justify-start"
+                }`}
+            >
+                <div
+                    className={`flex gap-2 max-w-[70%] ${
+                        message.senderId === currentUser.id
+                            ? "flex-row-reverse"
+                            : "flex-row"
+                    }`}
+                >
+                    {message.senderId !== currentUser.id && (
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage
+                                src={selectedChat?.avatar}
+                                alt={selectedChat?.name}
+                            />
+                            <AvatarFallback>
+                                {selectedChat?.name[0]}
+                            </AvatarFallback>
+                        </Avatar>
+                    )}
+
+                    <div
+                        className={`rounded-lg p-3 ${
+                            message.senderId === currentUser.id &&
+                            message.type === "text"
+                                ? "bg-blue-500 text-white"
+                                : message.type === "text"
+                                ? "bg-gray-100"
+                                : ""
+                        }`}
+                    >
+                        {renderMessage(message)}
+                        <span className="text-xs opacity-70 mt-1 block">
+                            {message.timestamp}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        ));
     };
 
     // Return JSX (same as before)
@@ -323,56 +371,10 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                     {/* Messages Area */}
                     <ScrollArea className="flex-1 p-4">
                         <div className="space-y-4">
-                            {messages.map((message) => (
-                                <div
-                                    key={message.id}
-                                    className={`flex ${
-                                        message.sender === "me"
-                                            ? "justify-end"
-                                            : "justify-start"
-                                    }`}
-                                >
-                                    <div
-                                        className={`flex gap-2 max-w-[70%] ${
-                                            message.sender === "me"
-                                                ? "flex-row-reverse"
-                                                : "flex-row"
-                                        }`}
-                                    >
-                                        {message.sender !== "me" && (
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage
-                                                    src={selectedChat.avatar}
-                                                    alt={selectedChat.name}
-                                                />
-                                                <AvatarFallback>
-                                                    {selectedChat.name[0]}
-                                                </AvatarFallback>
-                                            </Avatar>
-                                        )}
-
-                                        <div
-                                            className={`rounded-lg p-3 ${
-                                                message.sender === "me" &&
-                                                message.type === "text"
-                                                    ? "bg-blue-500 text-white"
-                                                    : message.type === "text"
-                                                    ? "bg-gray-100"
-                                                    : ""
-                                            }`}
-                                        >
-                                            {renderMessage(message)}
-                                            <span className="text-xs opacity-70 mt-1 block">
-                                                {message.timestamp}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+                            {renderMessages()}
                             <div ref={messagesEndRef} />
                         </div>
                     </ScrollArea>
-
                     {/* Image Preview Area */}
                     {previewImages.length > 0 && (
                         <div className="p-2 border-t">
@@ -441,7 +443,13 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
 
             {/* Image Preview Modal */}
             <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-                <DialogContent className="max-w-4xl p-0 overflow-hidden">
+                <DialogContent
+                    className="max-w-4xl p-0 overflow-hidden"
+                    aria-describedby="image-preview-description"
+                >
+                    <div id="image-preview-description" className="sr-only">
+                        Xem trước hình ảnh trong cuộc trò chuyện
+                    </div>
                     {modalImage && (
                         <img
                             src={modalImage}
