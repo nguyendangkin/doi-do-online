@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Chat } from 'src/chats/entity/chats.entity';
 import { Users } from 'src/users/entity/users.entity';
 
@@ -10,9 +16,6 @@ export class Message {
   @Column({ type: 'text' })
   content: string;
 
-  // @Column({ type: 'enum', enum: ['me', 'other'] })
-  // sender: 'me' | 'other';
-
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   timestamp: Date;
 
@@ -22,6 +25,7 @@ export class Message {
   @ManyToOne(() => Chat, (chat) => chat.messages, { onDelete: 'CASCADE' })
   chat: Chat;
 
-  @ManyToOne(() => Users)
-  sender: Users; // Change from string enum to Users relation
+  @ManyToOne(() => Users, { nullable: false, onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'senderId' })
+  sender: Users;
 }

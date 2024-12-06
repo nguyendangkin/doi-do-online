@@ -33,7 +33,12 @@ export class ChatService {
           post: { id: postId },
         },
       ],
-      relations: ['sender', 'receiver', 'messages', 'post'],
+      relations: ['sender', 'receiver', 'messages', 'messages.sender', 'post'],
+      order: {
+        messages: {
+          timestamp: 'ASC',
+        },
+      },
     });
 
     // If no chat exists, create one
@@ -63,17 +68,24 @@ export class ChatService {
   }
 
   async findOne(id: number): Promise<Chat> {
-    return await this.chatRepository.findOne({
+    const chat = await this.chatRepository.findOne({
       where: { id },
-      relations: ['sender', 'receiver', 'messages'],
+      relations: ['sender', 'receiver', 'messages', 'messages.sender'],
+      order: {
+        messages: {
+          timestamp: 'ASC',
+        },
+      },
     });
+
+    return chat;
   }
 
   // Lấy danh sách chat của user
   async findUserChats(userId: number): Promise<Chat[]> {
     return await this.chatRepository.find({
       where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
-      relations: ['sender', 'receiver'],
+      relations: ['sender', 'receiver', 'messages', 'messages.sender'],
       order: { timestamp: 'DESC' },
     });
   }
