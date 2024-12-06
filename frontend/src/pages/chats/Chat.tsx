@@ -20,7 +20,7 @@ interface Conversation {
 interface Message {
     id: number;
     content: string | string[];
-    senderId: number; // Changed from sender: "me" | "other"
+    senderId?: number; // Optional vì API response không có
     timestamp: string;
     type: "text" | "image" | "multiple-images";
 }
@@ -94,7 +94,16 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                     const response = await axiosInstance.get(
                         `/chats/${selectedChat.id}`
                     );
-                    setMessages(response.data.messages);
+                    // Map messages để thêm senderId
+                    const messagesWithSender = response.data.messages.map(
+                        (msg: Message) => ({
+                            ...msg,
+                            // Thêm senderId từ response.data.sender.id
+                            senderId: response.data.sender.id,
+                        })
+                    );
+
+                    setMessages(messagesWithSender);
                     scrollToBottom();
                 } catch (error) {
                     console.error("Error fetching messages:", error);
@@ -240,54 +249,57 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
 
     // Update message rendering to compare actual user IDs
     const renderMessages = () => {
-        return messages.map((message) => (
-            <div
-                key={message.id}
-                className={`flex ${
-                    message.senderId === currentUser.id
-                        ? "justify-end"
-                        : "justify-start"
-                }`}
-            >
+        if (!selectedChat) return null;
+
+        return messages.map((message) => {
+            // Kiểm tra xem tin nhắn có phải của current user không
+            const isCurrentUserMessage = message.senderId === currentUser.id;
+
+            return (
                 <div
-                    className={`flex gap-2 max-w-[70%] ${
-                        message.senderId === currentUser.id
-                            ? "flex-row-reverse"
-                            : "flex-row"
+                    key={message.id}
+                    className={`flex ${
+                        isCurrentUserMessage ? "justify-end" : "justify-start"
                     }`}
                 >
-                    {message.senderId !== currentUser.id && (
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage
-                                src={selectedChat?.avatar}
-                                alt={selectedChat?.name}
-                            />
-                            <AvatarFallback>
-                                {selectedChat?.name[0]}
-                            </AvatarFallback>
-                        </Avatar>
-                    )}
-
                     <div
-                        className={`rounded-lg p-3 ${
-                            message.senderId === currentUser.id &&
-                            message.type === "text"
-                                ? "bg-blue-500 text-white"
-                                : message.type === "text"
-                                ? "bg-gray-100"
-                                : ""
+                        className={`flex gap-2 max-w-[70%] ${
+                            isCurrentUserMessage
+                                ? "flex-row-reverse"
+                                : "flex-row"
                         }`}
                     >
-                        {renderMessage(message)}
-                        <span className="text-xs opacity-70 mt-1 block">
-                            {message.timestamp}
-                        </span>
+                        {!isCurrentUserMessage && (
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                    src={selectedChat.avatar}
+                                    alt={selectedChat.name}
+                                />
+                                <AvatarFallback>
+                                    {selectedChat.name[0]}
+                                </AvatarFallback>
+                            </Avatar>
+                        )}
+
+                        <div
+                            className={`rounded-lg p-3 ${
+                                isCurrentUserMessage && message.type === "text"
+                                    ? "bg-blue-500 text-white"
+                                    : message.type === "text"
+                                    ? "bg-gray-100"
+                                    : ""
+                            }`}
+                        >
+                            {renderMessage(message)}
+                            <span className="text-xs opacity-70 mt-1 block">
+                                {message.timestamp}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        ));
+            );
+        });
     };
-
     // Return JSX (same as before)
     return (
         <Card className="h-[600px] flex rounded-lg overflow-hidden">
