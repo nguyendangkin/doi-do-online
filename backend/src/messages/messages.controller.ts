@@ -1,4 +1,11 @@
-import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { User } from 'src/auth/decorators/getCuttentUser.decorator';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
@@ -17,9 +24,15 @@ export class MessagesController {
   createMessage(
     @Param('chatId') chatId: number,
     @Body() messageDto: CreateMessageDto,
-    @User() user,
+    @Request() req, // Get the authenticated user from the request
   ) {
-    const { senderId, content, type } = messageDto; // Change from sender to senderId
-    return this.messageService.createMessage(chatId, senderId, content, type);
+    const { content, type } = messageDto;
+    // Use the authenticated user's ID instead of relying on the sent senderId
+    return this.messageService.createMessage(
+      chatId,
+      req.user.id,
+      content,
+      type,
+    );
   }
 }

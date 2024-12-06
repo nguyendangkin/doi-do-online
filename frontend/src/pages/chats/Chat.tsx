@@ -94,12 +94,15 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                     const response = await axiosInstance.get(
                         `/chats/${selectedChat.id}`
                     );
-                    // Map messages để thêm senderId
+
+                    // Map messages với senderId từ message.sender.id thay vì chat.sender.id
                     const messagesWithSender = response.data.messages.map(
-                        (msg: Message) => ({
-                            ...msg,
-                            // Thêm senderId từ response.data.sender.id
-                            senderId: response.data.sender.id,
+                        (msg: any) => ({
+                            id: msg.id,
+                            content: msg.content,
+                            senderId: msg.sender.id, // Lấy ID từ sender của mỗi tin nhắn
+                            timestamp: msg.timestamp,
+                            type: msg.type,
                         })
                     );
 
