@@ -298,7 +298,7 @@ export default function Home() {
                     </DialogDescription>
                     {selectedSeller && (
                         <MessengerChat
-                            currentUser={currentUser}
+                            currentUser={userId}
                             sellerId={selectedSeller.id}
                             postId={selectedPost?.id} // Thêm postId
                         />

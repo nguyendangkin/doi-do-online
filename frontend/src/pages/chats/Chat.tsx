@@ -256,6 +256,8 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
 
         return messages.map((message) => {
             // Kiểm tra xem tin nhắn có phải của current user không
+            console.log(message.senderId, "-", currentUser);
+
             const isCurrentUserMessage = message.senderId === currentUser.id;
 
             return (
