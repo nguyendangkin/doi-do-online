@@ -49,7 +49,6 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Fetch conversations
     const formatChatData = (chat: any) => {
         const otherUser =
             currentUser.id === chat.sender.id ? chat.receiver : chat.sender;
@@ -63,28 +62,49 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
         };
     };
 
+    // Fetch conversations and handle initial selection
     useEffect(() => {
         const fetchConversations = async () => {
             try {
                 if (sellerId && postId) {
-                    // Check cả postId
-                    const response = await axiosInstance.get(
-                        `/chats/seller/${sellerId}/post/${postId}`
-                    );
-                    const formattedChat = formatChatData(response.data);
-                    setConversations([formattedChat]);
-                    setSelectedChat(formattedChat);
+                    // Trường hợp click vào sản phẩm
+                    try {
+                        // Thử lấy cuộc trò chuyện hiện có
+                        const response = await axiosInstance.get(
+                            `/chats/seller/${sellerId}/post/${postId}`
+                        );
+                        const formattedChat = formatChatData(response.data);
+                        setConversations([formattedChat]);
+                        setSelectedChat(formattedChat);
+                    } catch (error) {
+                        // Nếu không có cuộc trò chuyện, tạo mới
+                        const createResponse = await axiosInstance.post(
+                            "/chats",
+                            {
+                                sellerId,
+                                postId,
+                            }
+                        );
+                        const newChat = formatChatData(createResponse.data);
+                        setConversations([newChat]);
+                        setSelectedChat(newChat);
+                    }
                 } else {
+                    // Trường hợp mở messenger thông thường
                     const response = await axiosInstance.get("/chats");
                     const formattedChats = response.data.map(formatChatData);
                     setConversations(formattedChats);
+                    // Tự động chọn cuộc trò chuyện đầu tiên nếu có
+                    if (formattedChats.length > 0) {
+                        setSelectedChat(formattedChats[0]);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching conversations:", error);
             }
         };
         fetchConversations();
-    }, [sellerId, postId, currentUser]); // Thêm postId vào dependencies
+    }, [sellerId, postId, currentUser]);
 
     // Fetch messages when selecting a chat
     useEffect(() => {
