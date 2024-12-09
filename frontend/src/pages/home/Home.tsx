@@ -79,25 +79,26 @@ export default function Home() {
         setSelectedPost(null);
     };
 
-    const handleChatWithSeller = (
+    const handleChatWithSeller = async (
         seller: { id: number; email: string },
         postId: number
     ) => {
         if (shouldShowChatButton(seller.id)) {
-            setSelectedSeller(seller);
-            setIsChatOpen(true);
+            try {
+                // Đợi fetch chat hoàn tất
+                await axiosInstance.get(
+                    `/chats/seller/${seller.id}/post/${postId}`
+                );
 
-            // Sửa URL endpoint để match với backend
-            axiosInstance
-                .get(`/chats/seller/${seller.id}/post/${postId}`) // Thêm /post/${postId}
-                .then((response) => {
-                    console.log("Chat fetched:", response.data);
-                })
-                .catch((error) => {
-                    console.error("Error fetching chat:", error);
-                });
+                // Sau khi có dữ liệu rồi mới mở dialog
+                setSelectedSeller(seller);
+                setIsChatOpen(true);
+            } catch (error) {
+                console.error("Error fetching chat:", error);
+            }
         }
     };
+
     const fetchPosts = async (page: number = 1, tag: string | null = null) => {
         try {
             let url = `/posts/all?page=${page}&limit=${POSTS_PER_PAGE}`;

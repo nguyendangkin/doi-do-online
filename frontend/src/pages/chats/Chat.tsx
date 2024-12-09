@@ -44,10 +44,12 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     const [previewImages, setPreviewImages] = useState<string[]>([]);
     const [isImageModalOpen, setIsImageModalOpen] = useState<boolean>(false);
     const [modalImage, setModalImage] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    // const initialFetchCompleted = useRef<boolean>(false);
 
     const formatChatData = (chat: any) => {
         const otherUser =
@@ -65,17 +67,18 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     // Fetch conversations and handle initial selection
     useEffect(() => {
         const fetchConversations = async () => {
+            // if (initialFetchCompleted.current) return;
+
+            setIsLoading(true);
             try {
                 if (sellerId && postId) {
-                    // Trường hợp click vào sản phẩm
+                    let chatData;
                     try {
                         // Thử lấy cuộc trò chuyện hiện có
                         const response = await axiosInstance.get(
                             `/chats/seller/${sellerId}/post/${postId}`
                         );
-                        const formattedChat = formatChatData(response.data);
-                        setConversations([formattedChat]);
-                        setSelectedChat(formattedChat);
+                        chatData = response.data;
                     } catch (error) {
                         // Nếu không có cuộc trò chuyện, tạo mới
                         const createResponse = await axiosInstance.post(
@@ -85,54 +88,58 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                                 postId,
                             }
                         );
-                        const newChat = formatChatData(createResponse.data);
-                        setConversations([newChat]);
-                        setSelectedChat(newChat);
+                        chatData = createResponse.data;
                     }
+
+                    const formattedChat = formatChatData(chatData);
+                    setConversations([formattedChat]);
+                    setSelectedChat(formattedChat);
                 } else {
-                    // Trường hợp mở messenger thông thường
                     const response = await axiosInstance.get("/chats");
                     const formattedChats = response.data.map(formatChatData);
                     setConversations(formattedChats);
-                    // Tự động chọn cuộc trò chuyện đầu tiên nếu có
                     if (formattedChats.length > 0) {
                         setSelectedChat(formattedChats[0]);
                     }
                 }
+                // initialFetchCompleted.current = true;
             } catch (error) {
                 console.error("Error fetching conversations:", error);
+            } finally {
+                setIsLoading(false);
             }
         };
+
         fetchConversations();
     }, [sellerId, postId, currentUser]);
 
-    // Fetch messages when selecting a chat
+    // Fetch messages khi selectedChat thay đổi
     useEffect(() => {
         const fetchMessages = async () => {
-            if (selectedChat) {
-                try {
-                    const response = await axiosInstance.get(
-                        `/chats/${selectedChat.id}`
-                    );
+            if (!selectedChat) return;
 
-                    // Map messages với senderId từ message.sender.id thay vì chat.sender.id
-                    const messagesWithSender = response.data.messages.map(
-                        (msg: any) => ({
-                            id: msg.id,
-                            content: msg.content,
-                            senderId: msg.sender.id, // Lấy ID từ sender của mỗi tin nhắn
-                            timestamp: msg.timestamp,
-                            type: msg.type,
-                        })
-                    );
+            try {
+                const response = await axiosInstance.get(
+                    `/chats/${selectedChat.id}`
+                );
 
-                    setMessages(messagesWithSender);
-                    scrollToBottom();
-                } catch (error) {
-                    console.error("Error fetching messages:", error);
-                }
+                const messagesWithSender = response.data.messages.map(
+                    (msg: any) => ({
+                        id: msg.id,
+                        content: msg.content,
+                        senderId: msg.sender.id,
+                        timestamp: msg.timestamp,
+                        type: msg.type,
+                    })
+                );
+
+                setMessages(messagesWithSender);
+                scrollToBottom();
+            } catch (error) {
+                console.error("Error fetching messages:", error);
             }
         };
+
         fetchMessages();
     }, [selectedChat]);
 
@@ -329,173 +336,205 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     return (
         <Card className="h-[600px] flex rounded-lg overflow-hidden">
             {/* Sidebar */}
-            <div className="w-80 border-r bg-gray-50 flex flex-col">
-                <div className="p-4 border-b">
-                    <div className="relative">
-                        <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
-                        <Input
-                            placeholder="Tìm kiếm..."
-                            className="pl-9"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                </div>
-
-                <ScrollArea className="flex-1">
-                    {filteredConversations.map((conv) => (
-                        <div
-                            key={conv.id}
-                            className={`p-3 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition-colors ${
-                                selectedChat?.id === conv.id
-                                    ? "bg-gray-100"
-                                    : ""
-                            }`}
-                            onClick={() => handleSelectChat(conv)}
-                        >
-                            <Avatar>
-                                <AvatarImage
-                                    src={conv.avatar}
-                                    alt={conv.name}
-                                />
-                                <AvatarFallback>{conv.name[0]}</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center justify-between">
-                                    <p className="font-medium">{conv.name}</p>
-                                    <span className="text-xs text-gray-500">
-                                        {conv.timestamp}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <p className="text-sm text-gray-500 truncate">
-                                        {conv.lastMessage}
-                                    </p>
-                                    {conv.unread > 0 && (
-                                        <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                                            {conv.unread}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </ScrollArea>
-            </div>
-
-            {/* Chat Area */}
-            {selectedChat ? (
-                <div className="flex-1 flex flex-col">
-                    {/* Chat Header */}
-                    <div className="p-4 border-b flex items-center gap-3">
-                        <Avatar>
-                            <AvatarImage
-                                src={selectedChat.avatar}
-                                alt={selectedChat.name}
-                            />
-                            <AvatarFallback>
-                                {selectedChat.name[0]}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <h2 className="font-medium">{selectedChat.name}</h2>
-                            <p className="text-sm text-gray-500">
-                                Đang hoạt động
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Messages Area */}
-                    <ScrollArea className="flex-1 p-4">
-                        <div className="space-y-4">
-                            {renderMessages()}
-                            <div ref={messagesEndRef} />
-                        </div>
-                    </ScrollArea>
-                    {/* Image Preview Area */}
-                    {previewImages.length > 0 && (
-                        <div className="p-2 border-t">
-                            <div className="flex gap-2 overflow-x-auto">
-                                {previewImages.map((img, index) => (
-                                    <div key={index} className="relative">
-                                        <img
-                                            src={img}
-                                            alt={`Preview ${index + 1}`}
-                                            className="h-20 w-20 object-cover rounded-lg"
-                                        />
-                                        <button
-                                            onClick={() =>
-                                                removePreviewImage(index)
-                                            }
-                                            className="absolute -top-2 -right-2 bg-gray-800 rounded-full p-1 hover:bg-gray-700 transition-colors"
-                                        >
-                                            <X className="h-3 w-3 text-white" />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Input Area */}
-                    <div className="p-4 border-t">
-                        <div className="flex gap-2">
-                            <Input
-                                placeholder="Nhập tin nhắn..."
-                                value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
-                                onKeyPress={(e) => {
-                                    if (e.key === "Enter") handleSendMessage();
-                                }}
-                            />
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                className="hidden"
-                                multiple
-                                accept="image/*"
-                                onChange={handleFileSelect}
-                            />
-                            <Button
-                                variant="outline"
-                                onClick={() => fileInputRef.current?.click()}
-                                className="hover:bg-gray-100 transition-colors"
-                            >
-                                <ImageIcon className="h-4 w-4" />
-                            </Button>
-                            <Button
-                                onClick={handleSendMessage}
-                                className="hover:bg-blue-600 transition-colors"
-                            >
-                                <Send className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
+            {isLoading ? (
+                <div className="flex-1 flex items-center justify-center">
+                    Đang tải...
                 </div>
             ) : (
-                <div className="flex-1 flex items-center justify-center text-gray-500">
-                    Chọn một cuộc trò chuyện để bắt đầu
-                </div>
-            )}
+                <>
+                    <div className="w-80 border-r bg-gray-50 flex flex-col">
+                        <div className="p-4 border-b">
+                            <div className="relative">
+                                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+                                <Input
+                                    placeholder="Tìm kiếm..."
+                                    className="pl-9"
+                                    value={searchQuery}
+                                    onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                    }
+                                />
+                            </div>
+                        </div>
 
-            {/* Image Preview Modal */}
-            <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-                <DialogContent
-                    className="max-w-4xl p-0 overflow-hidden"
-                    aria-describedby="image-preview-description"
-                >
-                    <div id="image-preview-description" className="sr-only">
-                        Xem trước hình ảnh trong cuộc trò chuyện
+                        <ScrollArea className="flex-1">
+                            {filteredConversations.map((conv) => (
+                                <div
+                                    key={conv.id}
+                                    className={`p-3 flex items-center gap-3 hover:bg-gray-100 cursor-pointer transition-colors ${
+                                        selectedChat?.id === conv.id
+                                            ? "bg-gray-100"
+                                            : ""
+                                    }`}
+                                    onClick={() => handleSelectChat(conv)}
+                                >
+                                    <Avatar>
+                                        <AvatarImage
+                                            src={conv.avatar}
+                                            alt={conv.name}
+                                        />
+                                        <AvatarFallback>
+                                            {conv.name[0]}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-center justify-between">
+                                            <p className="font-medium">
+                                                {conv.name}
+                                            </p>
+                                            <span className="text-xs text-gray-500">
+                                                {conv.timestamp}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <p className="text-sm text-gray-500 truncate">
+                                                {conv.lastMessage}
+                                            </p>
+                                            {conv.unread > 0 && (
+                                                <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                                                    {conv.unread}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </ScrollArea>
                     </div>
-                    {modalImage && (
-                        <img
-                            src={modalImage}
-                            alt="Preview"
-                            className="w-full h-full object-contain"
-                        />
+
+                    {/* Chat Area */}
+                    {selectedChat ? (
+                        <div className="flex-1 flex flex-col">
+                            {/* Chat Header */}
+                            <div className="p-4 border-b flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarImage
+                                        src={selectedChat.avatar}
+                                        alt={selectedChat.name}
+                                    />
+                                    <AvatarFallback>
+                                        {selectedChat.name[0]}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <h2 className="font-medium">
+                                        {selectedChat.name}
+                                    </h2>
+                                    <p className="text-sm text-gray-500">
+                                        Đang hoạt động
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Messages Area */}
+                            <ScrollArea className="flex-1 p-4">
+                                <div className="space-y-4">
+                                    {renderMessages()}
+                                    <div ref={messagesEndRef} />
+                                </div>
+                            </ScrollArea>
+                            {/* Image Preview Area */}
+                            {previewImages.length > 0 && (
+                                <div className="p-2 border-t">
+                                    <div className="flex gap-2 overflow-x-auto">
+                                        {previewImages.map((img, index) => (
+                                            <div
+                                                key={index}
+                                                className="relative"
+                                            >
+                                                <img
+                                                    src={img}
+                                                    alt={`Preview ${index + 1}`}
+                                                    className="h-20 w-20 object-cover rounded-lg"
+                                                />
+                                                <button
+                                                    onClick={() =>
+                                                        removePreviewImage(
+                                                            index
+                                                        )
+                                                    }
+                                                    className="absolute -top-2 -right-2 bg-gray-800 rounded-full p-1 hover:bg-gray-700 transition-colors"
+                                                >
+                                                    <X className="h-3 w-3 text-white" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Input Area */}
+                            <div className="p-4 border-t">
+                                <div className="flex gap-2">
+                                    <Input
+                                        placeholder="Nhập tin nhắn..."
+                                        value={newMessage}
+                                        onChange={(e) =>
+                                            setNewMessage(e.target.value)
+                                        }
+                                        onKeyPress={(e) => {
+                                            if (e.key === "Enter")
+                                                handleSendMessage();
+                                        }}
+                                    />
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleFileSelect}
+                                    />
+                                    <Button
+                                        variant="outline"
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        className="hover:bg-gray-100 transition-colors"
+                                    >
+                                        <ImageIcon className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        onClick={handleSendMessage}
+                                        className="hover:bg-blue-600 transition-colors"
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-gray-500">
+                            Chọn một cuộc trò chuyện để bắt đầu
+                        </div>
                     )}
-                </DialogContent>
-            </Dialog>
+
+                    {/* Image Preview Modal */}
+                    <Dialog
+                        open={isImageModalOpen}
+                        onOpenChange={setIsImageModalOpen}
+                    >
+                        <DialogContent
+                            className="max-w-4xl p-0 overflow-hidden"
+                            aria-describedby="image-preview-description"
+                        >
+                            <div
+                                id="image-preview-description"
+                                className="sr-only"
+                            >
+                                Xem trước hình ảnh trong cuộc trò chuyện
+                            </div>
+                            {modalImage && (
+                                <img
+                                    src={modalImage}
+                                    alt="Preview"
+                                    className="w-full h-full object-contain"
+                                />
+                            )}
+                        </DialogContent>
+                    </Dialog>
+                </>
+            )}
         </Card>
     );
 };
