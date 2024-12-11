@@ -7,6 +7,7 @@ import { MessageService } from 'src/messages/messages.service';
 import { ChatsModule } from 'src/chats/chats.module';
 import { UsersModule } from 'src/users/users.module';
 import { Users } from 'src/users/entity/users.entity';
+import { FileUploadService } from 'src/messages/FileUploadService';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { Users } from 'src/users/entity/users.entity';
     UsersModule,
   ],
   controllers: [MessagesController],
-  providers: [MessageService],
+  providers: [MessageService, FileUploadService],
   exports: [MessageService],
 })
 export class MessagesModule {}

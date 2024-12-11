@@ -45,6 +45,7 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     const [isImageModalOpen, setIsImageModalOpen] = useState<boolean>(false);
     const [modalImage, setModalImage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const hostApi = import.meta.env.VITE_API_URL;
 
     // Refs
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -62,6 +63,26 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
             timestamp: new Date(chat.timestamp).toLocaleString(),
             unread: chat.unread,
         };
+    };
+
+    const processImageUrl = (content: string | string[]) => {
+        if (typeof content === "string") {
+            try {
+                // Check if the content is a JSON string containing an array
+                const parsed = JSON.parse(content);
+                if (Array.isArray(parsed)) {
+                    return parsed.map((url) => `${hostApi}${url}`);
+                }
+            } catch {
+                // If it's not JSON, treat it as a single URL
+                return `${hostApi}${content}`;
+            }
+        }
+        // If content is already an array, process each URL
+        if (Array.isArray(content)) {
+            return content.map((url) => `${hostApi}${url}`);
+        }
+        return content;
     };
 
     // Fetch conversations and handle initial selection
@@ -230,10 +251,50 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
         setIsImageModalOpen(true);
     };
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        const newImages = files.map((file) => URL.createObjectURL(file));
-        setPreviewImages([...previewImages, ...newImages]);
+
+        // Hiển thị preview
+        const previews = files.map((file) => URL.createObjectURL(file));
+        setPreviewImages(previews);
+
+        // Tạo FormData để upload
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append("images", file);
+        });
+        if (!selectedChat) {
+            console.error("No chat selected");
+            return; // Dừng nếu không có cuộc trò chuyện được chọn
+        }
+        try {
+            // Upload ảnh lên server
+            const response = await axiosInstance.post(
+                `/messages/${selectedChat.id}/images`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+
+            // Thêm tin nhắn ảnh vào state
+            const newMessage = {
+                id: response.data.id,
+                content: response.data.content,
+                senderId: currentUser.id,
+                timestamp: response.data.timestamp,
+                type: response.data.type,
+            };
+
+            setMessages([...messages, newMessage]);
+            setPreviewImages([]);
+            setTimeout(scrollToBottom, 100);
+        } catch (error) {
+            console.error("Error uploading images:", error);
+            // Hiển thị thông báo lỗi cho người dùng
+        }
     };
 
     const removePreviewImage = (index: number) => {
@@ -247,36 +308,50 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
     // Message renderer
     const renderMessage = (message: Message) => {
         switch (message.type) {
-            case "image":
+            case "image": {
+                const imageUrl = processImageUrl(message.content);
+                if (Array.isArray(imageUrl)) {
+                    // If we got an array with a single image
+                    return (
+                        <img
+                            src={imageUrl[0]}
+                            alt="Sent image"
+                            className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => handleImageClick(imageUrl[0])}
+                        />
+                    );
+                }
+                // Single image string
                 return (
                     <img
-                        src={message.content as string}
+                        src={imageUrl}
                         alt="Sent image"
                         className="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() =>
-                            handleImageClick(message.content as string)
-                        }
+                        onClick={() => handleImageClick(imageUrl)}
                     />
                 );
-            case "multiple-images":
+            }
+            case "multiple-images": {
+                const imageUrls = processImageUrl(message.content);
                 return (
                     <div className="grid grid-cols-2 gap-1">
-                        {(message.content as string[]).map((img, index) => (
-                            <img
-                                key={index}
-                                src={img}
-                                alt={`Sent image ${index + 1}`}
-                                className="max-w-[150px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => handleImageClick(img)}
-                            />
-                        ))}
+                        {Array.isArray(imageUrls) &&
+                            imageUrls.map((img, index) => (
+                                <img
+                                    key={index}
+                                    src={img}
+                                    alt={`Sent image ${index + 1}`}
+                                    className="max-w-[150px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                    onClick={() => handleImageClick(img)}
+                                />
+                            ))}
                     </div>
                 );
+            }
             default:
                 return <p>{message.content as string}</p>;
         }
     };
-
     // Update message rendering to compare actual user IDs
     const renderMessages = () => {
         if (!selectedChat) return null;
