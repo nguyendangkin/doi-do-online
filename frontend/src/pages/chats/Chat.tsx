@@ -7,6 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Send, Search, Image as ImageIcon, X } from "lucide-react";
 import axiosInstance from "@/axios/axiosConfig";
+import { DialogDescription, DialogTitle } from "@radix-ui/react-dialog";
 
 interface Conversation {
     id: number;
@@ -589,16 +590,13 @@ const MessengerChat: React.FC<MessengerChatProps> = ({
                         open={isImageModalOpen}
                         onOpenChange={setIsImageModalOpen}
                     >
-                        <DialogContent
-                            className="max-w-4xl p-0 overflow-hidden"
-                            aria-describedby="image-preview-description"
-                        >
-                            <div
-                                id="image-preview-description"
-                                className="sr-only"
-                            >
+                        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+                            <DialogTitle className="sr-only">
+                                Xem ảnh
+                            </DialogTitle>
+                            <DialogDescription className="sr-only">
                                 Xem trước hình ảnh trong cuộc trò chuyện
-                            </div>
+                            </DialogDescription>
                             {modalImage && (
                                 <img
                                     src={modalImage}
