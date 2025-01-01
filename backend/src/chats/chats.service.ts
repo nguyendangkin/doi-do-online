@@ -13,13 +13,11 @@ export class ChatService {
     private readonly userRepository: Repository<Users>,
   ) {}
 
-  // Tìm hoặc tạo chat với seller
   async findOrCreateChatWithSellerAndPost(
     currentUserId: number,
     sellerId: number,
     postId: number,
   ): Promise<Chat> {
-    // Find existing chat for this post
     let chat = await this.chatRepository.findOne({
       where: [
         {
@@ -41,7 +39,6 @@ export class ChatService {
       },
     });
 
-    // If no chat exists, create one
     if (!chat) {
       const [sender, receiver] = await Promise.all([
         this.userRepository.findOneBy({ id: currentUserId }),
@@ -55,7 +52,7 @@ export class ChatService {
       chat = this.chatRepository.create({
         sender,
         receiver,
-        post: { id: postId }, // Associate with post
+        post: { id: postId },
         lastMessage: '',
         timestamp: new Date(),
         unread: 0,
@@ -81,7 +78,6 @@ export class ChatService {
     return chat;
   }
 
-  // Lấy danh sách chat của user
   async findUserChats(userId: number): Promise<Chat[]> {
     return await this.chatRepository.find({
       where: [{ sender: { id: userId } }, { receiver: { id: userId } }],
@@ -100,7 +96,7 @@ export class ChatService {
       {
         lastMessage,
         unread,
-        timestamp: new Date(), // Cập nhật thời gian cuối cùng của chat
+        timestamp: new Date(),
       },
     );
   }

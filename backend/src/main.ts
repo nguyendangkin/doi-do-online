@@ -6,17 +6,16 @@ import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule); // Specify the type as NestExpressApplication
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.use(cookieParser());
 
   app.enableCors({
-    origin: 'http://localhost:5173', // Address of the frontend
-    credentials: true, // Allow cookies
+    origin: 'http://localhost:5173',
+    credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe());
 
-  // Use static assets for the express app
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });

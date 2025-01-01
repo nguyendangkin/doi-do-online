@@ -12,18 +12,18 @@ export class Posts {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column('text', { array: true }) // lưu nhiều đường dẫn ảnh
+  @Column('text', { array: true })
   images: string[];
 
   @Column('text')
   content: string;
 
-  @Column({ nullable: true }) // cho phép giá trị NULL
+  @Column({ nullable: true })
   tag: string;
 
   @ManyToOne(() => Users, (user) => user.post, { onDelete: 'CASCADE' })
   user: Users;
 
   @CreateDateColumn()
-  createdAt: Date; // Thời gian tạo bài viết
+  createdAt: Date;
 }

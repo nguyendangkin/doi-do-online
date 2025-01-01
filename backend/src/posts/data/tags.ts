@@ -13,5 +13,4 @@ export const tagsProducts = [
   'Đồ Chơi Trẻ Em',
   'Thực Phẩm & Đồ Uống',
   'Sản Phẩm Sức Khỏe',
-  // Có thể thêm tag khác nếu cần
 ];

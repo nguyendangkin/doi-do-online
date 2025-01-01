@@ -46,12 +46,10 @@ export class ChatsController {
   async findOne(@Param('id') id: number, @Request() req, @User() user) {
     const chat = await this.chatService.findOne(id);
 
-    // Kiểm tra xem chat có tồn tại không
     if (!chat) {
       throw new Error('Chat not found');
     }
 
-    // Kiểm tra quyền truy cập
     if (chat.sender.id !== req.user.id && chat.receiver.id !== req.user.id) {
       throw new ForbiddenException('You do not have access to this chat');
     }

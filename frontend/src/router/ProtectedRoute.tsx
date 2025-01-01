@@ -26,6 +26,5 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
     }, [accessToken, location.pathname, navigate]);
 
-    // Render the children if the conditions are not met
     return <>{children}</>;
 }

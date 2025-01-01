@@ -54,7 +54,6 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
     const hostApi = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
-        // Convert existing image URLs to ImageItem format
         const initialImages: ImageItem[] = post.images.map((imageUrl) => ({
             url: imageUrl,
             isNew: false,
@@ -126,7 +125,6 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
             formData.append("content", content);
             formData.append("tag", selectedTag);
 
-            // Add only new images to formData
             const newImages = images.filter((img) => img.isNew);
             newImages.forEach((img) => {
                 if (img.file) {
@@ -134,7 +132,6 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
                 }
             });
 
-            // Add existing image paths
             const existingImages = images
                 .filter((img) => !img.isNew)
                 .map((img) => img.url);
@@ -174,12 +171,11 @@ const DialogViewEditPost: React.FC<DialogViewEditPostProps> = ({
         setSelectedTag(value);
     };
 
-    // Thêm hàm mới để xử lý URL ảnh
     const getImageUrl = (image: ImageItem): string => {
         if (image.isNew) {
-            return image.url; // URL.createObjectURL đã được tạo khi upload
+            return image.url;
         }
-        // Ảnh từ server
+
         return image.url.startsWith("http")
             ? image.url
             : `${hostApi}${image.url}`;

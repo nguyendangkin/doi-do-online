@@ -87,13 +87,11 @@ export class UsersService {
   ) {
     const { currentPassword, newPassword, fullName } = updateUserDto;
 
-    // Tìm người dùng hiện tại từ email
     const userEntity = await this.findOneUserByEmail(user.email);
     if (!userEntity) {
       throw new BadRequestException('User not found');
     }
 
-    // Xác thực mật khẩu hiện tại
     if (
       currentPassword &&
       !(await bcrypt.compare(currentPassword, userEntity.password))
@@ -101,23 +99,19 @@ export class UsersService {
       throw new BadRequestException('Mật khẩu hiện tại không khớp');
     }
 
-    // Nếu có mật khẩu mới thì mã hóa và lưu
     if (newPassword) {
       userEntity.password = await bcrypt.hash(newPassword, 10);
     }
 
-    // Cập nhật tên đầy đủ nếu có
     if (fullName) {
       userEntity.fullName = fullName;
     }
 
-    // Xử lý avatar
     if (avatar) {
       const avatarUrl = await this.uploadAvatar(avatar);
       userEntity.avatarUrl = avatarUrl;
     }
 
-    // Lưu lại thông tin người dùng
     await this.usersRepository.save(userEntity);
 
     return {
@@ -130,7 +124,6 @@ export class UsersService {
   async uploadAvatar(avatar: Express.Multer.File): Promise<string> {
     const uploadDir = path.join(process.cwd(), 'uploads');
 
-    // Tạo thư mục uploads nếu chưa tồn tại
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -139,10 +132,8 @@ export class UsersService {
     const fileName = `${uuidv4()}${fileExtension}`;
     const filePath = path.join(uploadDir, fileName);
 
-    // Ghi file vào hệ thống file
     fs.writeFileSync(filePath, avatar.buffer);
 
-    // Trả về đường dẫn tương đối của file
     return `/uploads/${fileName}`;
   }
 }

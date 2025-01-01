@@ -5,21 +5,18 @@ import authSlice from "@/redux/authSlice";
 import userSlice from "@/redux/userSlice";
 import postsSlice from "@/redux/postsSlice";
 
-// Cấu hình persist cho authSlice và userSlice
 const persistConfig = {
     key: "root",
     storage,
-    whitelist: ["auth"], // Chỉ định những reducer nào cần được persist
+    whitelist: ["auth"],
 };
 
-// Kết hợp các reducer
 const rootReducer = combineReducers({
     auth: authSlice,
     user: userSlice,
     post: postsSlice,
 });
 
-// Tạo persisted reducer cho toàn bộ ứng dụng
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({

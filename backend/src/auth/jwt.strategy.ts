@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: true, // Chúng ta sẽ tự xử lý việc kiểm tra hết hạn
+      ignoreExpiration: true,
       secretOrKey: configService.get('JWT_SECRET'),
     });
   }

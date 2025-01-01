@@ -56,9 +56,6 @@ export class UsersController {
     @Body() updateUser: UpdateUserDto,
     @UploadedFile() avatar: Express.Multer.File,
   ) {
-    // console.log(updateUser); // Các trường như fullName, currentPassword
-    // console.log(avatar); // Tệp avatar nếu có
-
     return this.usersService.updateUser(user, updateUser, avatar);
   }
 }

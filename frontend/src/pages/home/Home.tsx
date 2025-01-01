@@ -66,7 +66,6 @@ export default function Home() {
     const hostApi = import.meta.env.VITE_API_URL;
     const POSTS_PER_PAGE = 8;
 
-    // Hàm kiểm tra xem có nên hiển thị nút chat hay không
     const shouldShowChatButton = (postUserId: number) => {
         return userId?.id !== undefined && userId.id !== postUserId;
     };
@@ -85,12 +84,10 @@ export default function Home() {
     ) => {
         if (shouldShowChatButton(seller.id)) {
             try {
-                // Đợi fetch chat hoàn tất
                 await axiosInstance.get(
                     `/chats/seller/${seller.id}/post/${postId}`
                 );
 
-                // Sau khi có dữ liệu rồi mới mở dialog
                 setSelectedSeller(seller);
                 setIsChatOpen(true);
             } catch (error) {
@@ -301,7 +298,7 @@ export default function Home() {
                         <MessengerChat
                             currentUser={userId}
                             sellerId={selectedSeller.id}
-                            postId={selectedPost?.id} // Thêm postId
+                            postId={selectedPost?.id}
                         />
                     )}
                 </DialogContent>

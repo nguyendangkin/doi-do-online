@@ -59,10 +59,10 @@ export class PostsController {
   async createPost(
     @User() user: { email: string },
     @Body() createPostData: CreatePostDto,
-    @UploadedFiles() images: Array<Express.Multer.File>, // Chắc chắn rằng bạn sử dụng @UploadedFiles() để nhận nhiều file
+    @UploadedFiles() images: Array<Express.Multer.File>,
   ) {
-    console.log(createPostData); // Kiểm tra lại log của content
-    console.log(images); // Log danh sách file
+    console.log(createPostData);
+    console.log(images);
     return this.postsService.createPost(user, createPostData, images);
   }
 
@@ -82,7 +82,7 @@ export class PostsController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 5,
     @Query('tag') tag?: string,
-    @Query('search') search?: string, // Thêm query parameter cho search
+    @Query('search') search?: string,
   ) {
     return this.postsService.getAllPosts(page, limit, tag, search);
   }
@@ -119,7 +119,7 @@ export class PostsController {
     @User() user,
     @Param('id', ParseIntPipe) idPost: number,
     @Body() updatePostData: UpdatePostDto,
-    @UploadedFiles() images: Array<Express.Multer.File>, // Chắc chắn rằng bạn sử dụng @UploadedFiles() để nhận nhiều file
+    @UploadedFiles() images: Array<Express.Multer.File>,
   ) {
     let existingImages: string[] = [];
     if (updatePostData.existingImages) {

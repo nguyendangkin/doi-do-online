@@ -36,7 +36,6 @@ export default function MyStore() {
     const hostApi = import.meta.env.VITE_API_URL;
     const POSTS_PER_PAGE = 5;
 
-    // Fetch posts from API with pagination
     const fetchPosts = async (page: number = 1) => {
         try {
             const response = await axiosInstance.get<PaginatedResponse>(
@@ -54,18 +53,15 @@ export default function MyStore() {
         fetchPosts(currentPage);
     }, [currentPage]);
 
-    // Open dialog for editing post
     const handleOpenDialogEditPost = (post: Post) => {
         setSelectedPost(post);
         setDialogOpen(true);
     };
 
-    // Handle page change
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
     };
 
-    // Generate page numbers for pagination
     const getPageNumbers = () => {
         const pages = [];
         for (let i = 1; i <= totalPages; i++) {

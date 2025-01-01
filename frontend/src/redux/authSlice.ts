@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    user: null as { avatarUrl: string | null } | null, // Định
+    user: null as { avatarUrl: string | null } | null,
 };
 
 export const authSlice = createSlice({
@@ -17,7 +17,6 @@ export const authSlice = createSlice({
     },
 });
 
-// Action creators are generated for each case reducer function
 export const { setUser, logout } = authSlice.actions;
 
 export default authSlice.reducer;

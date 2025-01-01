@@ -19,12 +19,12 @@ export class RolesGuard implements CanActivate {
     const { user } = context.switchToHttp().getRequest();
 
     return requiredRoles.some((role) => {
-      // Kiểm tra nếu user.role là một chuỗi đơn lẻ
+    
       if (typeof user.role === 'string') {
         return user.role === role;
       }
 
-      // Nếu user.roles là một mảng
+     
       return user.roles?.includes(role);
     });
   }

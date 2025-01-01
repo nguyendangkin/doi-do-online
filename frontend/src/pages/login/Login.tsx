@@ -30,7 +30,7 @@ export default function Login() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    // 1. Define your form.
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -39,18 +39,13 @@ export default function Login() {
         },
     });
 
-    // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        // console.log(values);
         try {
             setIsLoading(true);
             const responsive = await axiosInstance.post("/auth/login", values);
 
             dispatch(setUser(responsive.data));
             toast.success(responsive.data.message);
-            // navigate("/");
         } catch (error: any) {
             console.log(error);
 

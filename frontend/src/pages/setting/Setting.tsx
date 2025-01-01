@@ -149,7 +149,7 @@ export default function Setting() {
                     "Sending updated data:",
                     Object.fromEntries(formData)
                 );
-                // Gửi request cập nhật
+
                 const response = await axiosInstance.patch(
                     `/user/profile`,
                     formData,
@@ -159,7 +159,7 @@ export default function Setting() {
                 );
                 if (response.data) {
                     dispatch(setUserInfo(response.data));
-                    // Reset form fields sau khi cập nhật thành công
+
                     form.reset({
                         fullName: response.data.fullName,
                         currentPassword: "",

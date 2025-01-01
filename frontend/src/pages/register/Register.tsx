@@ -34,13 +34,13 @@ const formSchema = z
     })
     .refine((data) => data.password === data.confirmPassword, {
         message: "Mật khẩu và xác nhận mật khẩu phải khớp.",
-        path: ["confirmPassword"], // Chỉ định trường gặp lỗi
+        path: ["confirmPassword"],
     });
 
 export default function Register() {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
-    // 1. Define your form.
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -51,11 +51,7 @@ export default function Register() {
         },
     });
 
-    // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        // console.log(values);
         try {
             setIsLoading(true);
             const responsive = await axiosInstance.post(

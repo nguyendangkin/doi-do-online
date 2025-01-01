@@ -23,7 +23,7 @@ interface Post {
 }
 
 interface ProductDetailModalProps {
-    post: Post; // Sử dụng interface Post đã định nghĩa
+    post: Post;
     isOpen: boolean;
     onClose: () => void;
 }

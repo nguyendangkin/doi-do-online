@@ -10,7 +10,6 @@ interface AppProps {
 export default function App({ children }: AppProps) {
     const location = useLocation();
 
-    // Xác định layout dựa trên đường dẫn
     const renderLayout = () => {
         switch (location.pathname) {
             case "/dang-nhap":

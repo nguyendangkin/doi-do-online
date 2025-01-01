@@ -10,23 +10,21 @@ export class MessageService {
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
-    private readonly chatService: ChatService, // Dùng để cập nhật Chat
+    private readonly chatService: ChatService,
     @InjectRepository(Users)
     private readonly userRepository: Repository<Users>,
   ) {}
 
-  // Lấy danh sách tin nhắn thuộc một cuộc hội thoại
   async findMessagesByChat(chatId: number): Promise<Message[]> {
     return await this.messageRepository.find({
       where: { chat: { id: chatId } },
-      order: { timestamp: 'ASC' }, // Sắp xếp tin nhắn từ cũ đến mới
+      order: { timestamp: 'ASC' },
     });
   }
 
-  // Tạo tin nhắn mới
   async createMessage(
     chatId: number,
-    senderId: number, // Change from 'me' | 'other' to number
+    senderId: number,
     content: string,
     type: 'text' | 'image' | 'multiple-images',
   ): Promise<Message> {
@@ -51,7 +49,6 @@ export class MessageService {
     return savedMessage;
   }
 
-  // Xóa tin nhắn
   async deleteMessage(messageId: number): Promise<void> {
     await this.messageRepository.delete(messageId);
   }
