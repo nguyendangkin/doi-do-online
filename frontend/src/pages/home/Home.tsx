@@ -22,8 +22,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { setPosts } from "@/redux/postsSlice";
 import { useSearchParams } from "react-router-dom";
 import ProductDetailModal from "@/pages/home/ProductDetailModal";
-import MessengerChat from "@/pages/chats/Chat";
+
 import { DialogDescription } from "@radix-ui/react-dialog";
+import MessengerChat from "@/pages/chats/Chat";
 
 interface Post {
     id: number;
